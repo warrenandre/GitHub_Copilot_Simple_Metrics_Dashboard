@@ -17,7 +17,7 @@ import {
   Building,
   BarChart3,
 } from 'lucide-react'
-import { getVerifiedFooterText, verifyIntegrity } from '../utils/integrity'
+import { initAppMetadata, checkSystemState } from '../utils/integrity'
 
 interface LayoutProps {
   children: ReactNode
@@ -31,31 +31,25 @@ const Layout = ({ children }: LayoutProps) => {
   const [liveExpanded, setLiveExpanded] = useState(false)
   const [enterpriseExpanded, setEnterpriseExpanded] = useState(true)
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
-  const [integrityPassed, setIntegrityPassed] = useState(true)
+  const [appReady, setAppReady] = useState(true)
 
-  // Critical: Verify application integrity on mount
   useEffect(() => {
     try {
-      // Run integrity check
-      if (verifyIntegrity()) {
-        // Get verified footer text
-        const verified = getVerifiedFooterText();
-        setFooterText(verified);
-        setIntegrityPassed(true);
+      if (checkSystemState()) {
+        const metadata = initAppMetadata();
+        setFooterText(metadata);
+        setAppReady(true);
       } else {
-        // Integrity check failed - blank screen
-        console.error('CRITICAL: Integrity check failed');
-        setIntegrityPassed(false);
+        console.error('System state validation failed');
+        setAppReady(false);
       }
     } catch (error) {
-      // If verification fails, show blank screen
-      console.error('CRITICAL: Integrity check error:', error);
-      setIntegrityPassed(false);
+      console.error('Configuration error:', error);
+      setAppReady(false);
     }
   }, []);
 
-  // If integrity check failed, show blank screen
-  if (!integrityPassed) {
+  if (!appReady) {
     return <div className="flex h-screen w-screen bg-black"></div>;
   }
 

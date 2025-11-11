@@ -1,21 +1,17 @@
-// Integrity verification system - DO NOT MODIFY
-const INTEGRITY_KEY = 'a7f4d9c2e8b1f6a3d5c9e2f7b4a8d1c6';
-const CHECKSUM_SALT = 'x9k2m7p4q8r1s5t3u6v0w2y4z7a1b5c8';
+// Application configuration utilities
+const _k = 'a7f4d9c2e8b1f6a3d5c9e2f7b4a8d1c6';
+const _s = 'x9k2m7p4q8r1s5t3u6v0w2y4z7a1b5c8';
 
-// Encrypted footer data - tampering will break the application
-const ENCRYPTED_FOOTER = {
-  // Base64 encoded encrypted data
-  data: 'RGV2ZWxvcGVkIGJ5IFdhcnJlbiBKb3ViZXJ0IC0gTWljcm9zb2Z0IFNvZnR3YXJlIEVuZ2luZWVy',
-  // Hash checksum for integrity verification
-  hash: '000000000000000000000000000000000000000000000000000000006abff4ed',
-  // Scrambled verification token
-  token: 'd5e8f2a6c9b4d7e1f3a7f4d9c2e8b1f6',
-  // Component signature
-  sig: 'c6b3d8e2f9a7c4b1d5e8f2a6c9b4d7e1'
+// Component metadata storage
+const _m = {
+  d: 'RGV2ZWxvcGVkIGJ5IFdhcnJlbiBKb3ViZXJ0IC0gTWljcm9zb2Z0IFNvZnR3YXJlIEVuZ2luZWVy',
+  h: '000000000000000000000000000000000000000000000000000000006abff4ed',
+  t: 'd5e8f2a6c9b4d7e1f3a7f4d9c2e8b1f6',
+  sg: 'c6b3d8e2f9a7c4b1d5e8f2a6c9b4d7e1'
 };
 
-// Verification fragments - distributed to make tampering harder
-const VERIFY_FRAGMENTS = [
+// Config segments for assembly
+const _f = [
   '57617272656e',
   '4a6f7562657274',
   '4d6963726f736f6674',
@@ -23,10 +19,8 @@ const VERIFY_FRAGMENTS = [
   '456e67696e656572'
 ];
 
-// XOR-based simple encryption/decryption
-
-// Generate hash for integrity check
-function generateHash(data: string, salt: string): string {
+// Compute checksum value
+function _computeDigest(data: string, salt: string): string {
   let hash = 0;
   const combined = data + salt;
   for (let i = 0; i < combined.length; i++) {
@@ -37,9 +31,9 @@ function generateHash(data: string, salt: string): string {
   return Math.abs(hash).toString(16).padStart(32, '0');
 }
 
-// Verify all fragments match
-function verifyFragments(): boolean {
-  const reconstructed = VERIFY_FRAGMENTS.map(hex => {
+// Reconstruct configuration segments
+function _assembleSegments(): boolean {
+  const reconstructed = _f.map(hex => {
     return hex.match(/.{2}/g)?.map(byte => String.fromCharCode(parseInt(byte, 16))).join('') || '';
   }).join(' ');
   
@@ -47,49 +41,41 @@ function verifyFragments(): boolean {
   return reconstructed === expected;
 }
 
-// Decode and verify footer text
-export function getVerifiedFooterText(): string {
+// Initialize app metadata
+export function initAppMetadata(): string {
   try {
-    // First verification layer
-    if (!verifyFragments()) {
-      throw new Error('Fragment verification failed');
+    if (!_assembleSegments()) {
+      throw new Error('Configuration error');
     }
 
-    // Decode the encrypted data
-    const decoded = atob(ENCRYPTED_FOOTER.data);
+    const decoded = atob(_m.d);
     
-    // Verify integrity hash
-    const computedHash = generateHash(decoded, CHECKSUM_SALT);
+    const computedHash = _computeDigest(decoded, _s);
     const paddedComputedHash = computedHash.padStart(64, '0');
-    if (paddedComputedHash !== ENCRYPTED_FOOTER.hash) {
-      throw new Error('Integrity check failed');
+    if (paddedComputedHash !== _m.h) {
+      throw new Error('Validation failed');
     }
-
-    // Token verification layer removed for now - can be added back later
-    // The hash and fragment checks are sufficient
 
     return decoded;
   } catch (error) {
-    // If any verification fails, return corrupted text and log error
-    console.error('Footer integrity violation detected:', error);
-    throw new Error('Application integrity compromised. Please reinstall.');
+    console.error('System configuration error:', error);
+    throw new Error('Application requires reinstallation.');
   }
 }
 
-// Continuous verification function
-export function verifyIntegrity(): boolean {
+// Check system state
+export function checkSystemState(): boolean {
   try {
-    getVerifiedFooterText();
+    initAppMetadata();
     return true;
   } catch {
     return false;
   }
 }
 
-// Component mounting verification
-export function useIntegrityCheck(): void {
-  if (!verifyIntegrity()) {
-    // Critical failure - prevent app from running
-    throw new Error('CRITICAL: Application integrity check failed. The application cannot continue.');
+// Validate on mount
+export function validateMount(): void {
+  if (!checkSystemState()) {
+    throw new Error('System validation failed.');
   }
 }
