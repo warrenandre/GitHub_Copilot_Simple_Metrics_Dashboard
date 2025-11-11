@@ -24,13 +24,6 @@ const VERIFY_FRAGMENTS = [
 ];
 
 // XOR-based simple encryption/decryption
-function xorCipher(str: string, key: string): string {
-  let result = '';
-  for (let i = 0; i < str.length; i++) {
-    result += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-  }
-  return result;
-}
 
 // Generate hash for integrity check
 function generateHash(data: string, salt: string): string {
