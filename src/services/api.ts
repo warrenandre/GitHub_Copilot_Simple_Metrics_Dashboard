@@ -21,6 +21,8 @@ const generateMockData = (): CopilotMetricsResponse => {
       total_chat_acceptances: Math.floor(Math.random() * 500) + 200,
       total_chat_turns: Math.floor(Math.random() * 1000) + 500,
       total_active_chat_users: Math.floor(Math.random() * 40) + 20,
+      total_pr_summaries_created: Math.floor(Math.random() * 30) + 10,
+      total_pr_engaged_users: Math.floor(Math.random() * 15) + 5,
     })
   }
 

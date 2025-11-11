@@ -33,20 +33,20 @@ const Layout = ({ children }: LayoutProps) => {
   ]
 
   return (
-    <div className="flex h-screen bg-slate-900">
+    <div className="flex h-screen bg-slate-900 dark:bg-slate-900 light:bg-gray-50">
       {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0`}
+        } fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 dark:bg-slate-800 light:bg-white light:border-r light:border-gray-200 transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-700">
+          <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-700 dark:border-slate-700 light:border-gray-200">
             <Github className="w-8 h-8 text-blue-500" />
             <div>
-              <h1 className="text-lg font-bold text-white">Copilot</h1>
-              <p className="text-xs text-slate-400">Metrics Dashboard</p>
+              <h1 className="text-lg font-bold text-white dark:text-white light:text-gray-900">Copilot</h1>
+              <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">Metrics Dashboard</p>
             </div>
           </div>
 
@@ -56,7 +56,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div>
               <button
                 onClick={() => setDemoExpanded(!demoExpanded)}
-                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Database className="w-5 h-5" />
@@ -81,7 +81,7 @@ const Layout = ({ children }: LayoutProps) => {
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                           isActive
                             ? 'bg-blue-600 text-white'
-                            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                            : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -97,7 +97,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="pt-2">
               <button
                 onClick={() => setLiveExpanded(!liveExpanded)}
-                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5" />
@@ -123,7 +123,7 @@ const Layout = ({ children }: LayoutProps) => {
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                           isActive
                             ? 'bg-green-600 text-white'
-                            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                            : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -136,14 +136,14 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
 
             {/* Admin Section */}
-            <div className="pt-4 mt-4 border-t border-slate-700">
+            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <Link
                 to="/admin"
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
                   location.pathname === '/admin'
                     ? 'bg-purple-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
                 }`}
               >
                 <Settings className="w-5 h-5" />
@@ -153,9 +153,9 @@ const Layout = ({ children }: LayoutProps) => {
           </nav>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-700">
-            <p className="text-xs text-slate-400">
-              Powered by GitHub Copilot API
+          <div className="px-6 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
+            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
+              Developed by Warren Joubert - Microsoft Software Engineer
             </p>
           </div>
         </div>
@@ -164,27 +164,25 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
+        <header className="bg-slate-800 dark:bg-slate-800 light:bg-white border-b border-slate-700 dark:border-slate-700 light:border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden text-slate-300 hover:text-white"
+              className="lg:hidden text-slate-300 dark:text-slate-300 light:text-gray-700 hover:text-white dark:hover:text-white light:hover:text-gray-900"
             >
               {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-white">Last Updated</p>
-                <p className="text-xs text-slate-400">
-                  {new Date().toLocaleString()}
-                </p>
-              </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-white dark:text-white light:text-gray-900">Last Updated</p>
+              <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
+                {new Date().toLocaleString()}
+              </p>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-slate-900 p-6">
+        <main className="flex-1 overflow-y-auto bg-slate-900 dark:bg-slate-900 light:bg-gray-50 p-6">
           {children}
         </main>
       </div>

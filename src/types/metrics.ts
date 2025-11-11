@@ -102,6 +102,8 @@ export interface TeamMetrics {
   total_chat_acceptances: number
   total_chat_turns: number
   total_active_chat_users: number
+  total_pr_summaries_created?: number
+  total_pr_engaged_users?: number
 }
 
 export interface EditorMetrics {

@@ -4,6 +4,7 @@ import MetricCard from '../../components/MetricCard'
 import LineChart from '../../components/LineChart'
 import PieChart from '../../components/PieChart'
 import MetricsInsights from '../../components/MetricsInsights'
+import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
 import { githubApiService } from '../../services/githubApi'
 import { transformGitHubData, calculateAcceptanceRate, calculateAverageMetrics } from '../../services/dataTransform'
 import { CopilotMetricsResponse, LineChartData, ChartData } from '../../types/metrics'
@@ -12,6 +13,7 @@ const LiveOverview = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [dateRange, setDateRange] = useState<DateRange>('daily')
 
   const loadMetrics = async () => {
     setLoading(true)
@@ -49,7 +51,7 @@ const LiveOverview = () => {
   if (loading && !metrics) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl flex items-center gap-3">
+        <div className="text-white dark:text-white light:text-gray-900 text-xl flex items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin" />
           Loading live metrics...
         </div>
@@ -65,7 +67,7 @@ const LiveOverview = () => {
             <AlertCircle className="w-6 h-6 text-yellow-400 mt-1" />
             <div>
               <h3 className="text-lg font-semibold text-yellow-400 mb-2">No Data Available</h3>
-              <p className="text-sm text-slate-300 mb-3">
+              <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700 mb-3">
                 Please download metrics data from the Admin page first.
               </p>
               <a
@@ -81,14 +83,31 @@ const LiveOverview = () => {
     )
   }
 
-  const avgMetrics = calculateAverageMetrics(metrics.data)
-  const acceptanceRate = calculateAcceptanceRate(metrics.data)
-  const totalSuggestions = metrics.data.reduce((sum, d) => sum + d.total_suggestions_count, 0)
-  const totalChatTurns = metrics.data.reduce((sum, d) => sum + (d.total_chat_turns || 0), 0)
+  // Determine how many days to show based on date range
+  const getDaysToShow = () => {
+    switch (dateRange) {
+      case 'daily':
+        return 7
+      case 'weekly':
+        return 28
+      case 'monthly':
+        return 90
+      default:
+        return 7
+    }
+  }
+
+  const daysToShow = getDaysToShow()
+  const filteredData = metrics.data.slice(-daysToShow)
+
+  const avgMetrics = calculateAverageMetrics(filteredData)
+  const acceptanceRate = calculateAcceptanceRate(filteredData)
+  const totalSuggestions = filteredData.reduce((sum, d) => sum + d.total_suggestions_count, 0)
+  const totalChatTurns = filteredData.reduce((sum, d) => sum + (d.total_chat_turns || 0), 0)
   
   // Calculate week-over-week growth
-  const recentWeek = metrics.data.slice(-7)
-  const previousWeek = metrics.data.slice(-14, -7)
+  const recentWeek = filteredData.slice(-7)
+  const previousWeek = filteredData.slice(-14, -7)
   const recentWeekUsers = recentWeek.length > 0 
     ? recentWeek.reduce((sum, d) => sum + d.total_active_users, 0) / recentWeek.length 
     : 0
@@ -103,14 +122,14 @@ const LiveOverview = () => {
   const suggestionData: LineChartData[] = [
     {
       id: 'Suggestions',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_suggestions_count
       }))
     },
     {
       id: 'Acceptances',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_acceptances_count
       }))
@@ -129,28 +148,34 @@ const LiveOverview = () => {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-white">Live Dashboard Overview</h1>
+            <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900">Live Dashboard Overview</h1>
             <span className="px-3 py-1 bg-green-500 bg-opacity-20 text-green-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
               LIVE
             </span>
           </div>
-          <p className="text-slate-400">Real-time metrics from GitHub Copilot API</p>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">Real-time metrics from GitHub Copilot API</p>
         </div>
-        <button
-          onClick={loadMetrics}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <DateRangeSelector
+            selectedRange={dateRange}
+            onRangeChange={setDateRange}
+          />
+          <button
+            onClick={loadMetrics}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 light:bg-gray-200 hover:bg-slate-600 dark:hover:bg-slate-600 light:hover:bg-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-3">
-        <p className="text-sm text-slate-300">
-          <span className="font-semibold text-white">Last updated:</span>{' '}
-          {lastRefresh.toLocaleString()} • Auto-refreshes every 5 minutes
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-green-50 border border-slate-700 dark:border-slate-700 light:border-green-200 rounded-lg px-4 py-3">
+        <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
+          <span className="font-semibold text-white dark:text-white light:text-gray-900">Last updated:</span>{' '}
+          {lastRefresh.toLocaleString()} • Auto-refreshes every 5 minutes • Showing {getDaysToShow()} days of data
         </p>
       </div>
 

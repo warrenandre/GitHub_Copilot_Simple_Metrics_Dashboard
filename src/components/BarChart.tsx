@@ -1,4 +1,5 @@
 import { ResponsiveBar } from '@nivo/bar'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface BarChartProps {
   data: any[]
@@ -8,9 +9,12 @@ interface BarChartProps {
 }
 
 const BarChart = ({ data, keys, indexBy, title }: BarChartProps) => {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+
   return (
-    <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-      <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+    <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200">
+      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">{title}</h3>
       <div className="h-80">
         <ResponsiveBar
           data={data}
@@ -71,31 +75,31 @@ const BarChart = ({ data, keys, indexBy, title }: BarChartProps) => {
             axis: {
               ticks: {
                 text: {
-                  fill: '#94a3b8',
+                  fill: isDark ? '#94a3b8' : '#64748b',
                 },
               },
               legend: {
                 text: {
-                  fill: '#cbd5e1',
+                  fill: isDark ? '#cbd5e1' : '#475569',
                   fontSize: 12,
                 },
               },
             },
             grid: {
               line: {
-                stroke: '#334155',
+                stroke: isDark ? '#334155' : '#e2e8f0',
                 strokeWidth: 1,
               },
             },
             legends: {
               text: {
-                fill: '#cbd5e1',
+                fill: isDark ? '#cbd5e1' : '#475569',
               },
             },
             tooltip: {
               container: {
-                background: '#1e293b',
-                color: '#fff',
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#fff' : '#1e293b',
                 fontSize: 12,
                 borderRadius: '4px',
                 boxShadow: '0 3px 9px rgba(0, 0, 0, 0.5)',

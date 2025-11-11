@@ -1,5 +1,6 @@
 import { ResponsivePie } from '@nivo/pie'
 import { ChartData } from '../types/metrics'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface PieChartProps {
   data: ChartData[]
@@ -7,9 +8,12 @@ interface PieChartProps {
 }
 
 const PieChart = ({ data, title }: PieChartProps) => {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+
   return (
-    <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-      <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+    <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200">
+      <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">{title}</h3>
       <div className="h-80">
         <ResponsivePie
           data={data}
@@ -24,7 +28,7 @@ const PieChart = ({ data, title }: PieChartProps) => {
             modifiers: [['darker', 0.2]],
           }}
           arcLinkLabelsSkipAngle={10}
-          arcLinkLabelsTextColor="#cbd5e1"
+          arcLinkLabelsTextColor={isDark ? '#cbd5e1' : '#475569'}
           arcLinkLabelsThickness={2}
           arcLinkLabelsColor={{ from: 'color' }}
           arcLabelsSkipAngle={10}
@@ -42,7 +46,7 @@ const PieChart = ({ data, title }: PieChartProps) => {
               itemsSpacing: 0,
               itemWidth: 100,
               itemHeight: 18,
-              itemTextColor: '#cbd5e1',
+              itemTextColor: isDark ? '#cbd5e1' : '#475569',
               itemDirection: 'left-to-right',
               itemOpacity: 1,
               symbolSize: 18,
@@ -52,8 +56,8 @@ const PieChart = ({ data, title }: PieChartProps) => {
           theme={{
             tooltip: {
               container: {
-                background: '#1e293b',
-                color: '#fff',
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#fff' : '#1e293b',
                 fontSize: 12,
                 borderRadius: '4px',
                 boxShadow: '0 3px 9px rgba(0, 0, 0, 0.5)',

@@ -49,13 +49,13 @@ const InsightCard = ({ type, title, description, metric, recommendation }: Insig
         <div className="flex-1 min-w-0">
           <h4 className={`text-sm font-semibold ${textColor} mb-1`}>{title}</h4>
           {metric && (
-            <p className="text-2xl font-bold text-white mb-2">{metric}</p>
+            <p className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">{metric}</p>
           )}
-          <p className="text-sm text-slate-300 mb-2">{description}</p>
+          <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-600 mb-2">{description}</p>
           {recommendation && (
-            <div className="mt-3 pt-3 border-t border-slate-700">
-              <p className="text-xs font-semibold text-slate-400 mb-1">💡 Recommendation:</p>
-              <p className="text-xs text-slate-300">{recommendation}</p>
+            <div className="mt-3 pt-3 border-t border-slate-700 dark:border-slate-700 light:border-gray-300">
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 light:text-gray-600 mb-1">💡 Recommendation:</p>
+              <p className="text-xs text-slate-300 dark:text-slate-300 light:text-gray-600">{recommendation}</p>
             </div>
           )}
         </div>
@@ -198,9 +198,9 @@ const MetricsInsights = ({
     <div>
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-purple-400" />
-        <h3 className="text-lg font-semibold text-white">Actionable Insights</h3>
+        <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900">Actionable Insights</h3>
       </div>
-      <p className="text-sm text-slate-400 mb-4">
+      <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600 mb-4">
         Based on GitHub's official guidance for interpreting Copilot metrics
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

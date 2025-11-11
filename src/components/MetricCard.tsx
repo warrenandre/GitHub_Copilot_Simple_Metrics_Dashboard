@@ -12,22 +12,22 @@ const MetricCard = ({ title, value, change, icon, trend = 'neutral' }: MetricCar
   const trendColors = {
     up: 'text-green-400',
     down: 'text-red-400',
-    neutral: 'text-slate-400',
+    neutral: 'text-slate-400 dark:text-slate-400 light:text-gray-500',
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-blue-500 transition-colors">
+    <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200 hover:border-blue-500 transition-colors">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-slate-400 text-sm font-medium mb-2">{title}</p>
-          <p className="text-3xl font-bold text-white mb-1">{value}</p>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600 text-sm font-medium mb-2">{title}</p>
+          <p className="text-3xl font-bold text-white dark:text-white light:text-gray-900 mb-1">{value}</p>
           {change && (
             <p className={`text-sm font-medium ${trendColors[trend]}`}>
               {change}
             </p>
           )}
         </div>
-        <div className="bg-blue-500 bg-opacity-10 p-3 rounded-lg">
+        <div className="bg-blue-500 bg-opacity-10 dark:bg-opacity-10 light:bg-opacity-20 p-3 rounded-lg">
           <div className="text-blue-500">{icon}</div>
         </div>
       </div>

@@ -44,6 +44,9 @@ export const transformGitHubData = (githubData: GitHubCopilotMetricsResponse): C
           .reduce((modelSum, model) => modelSum + (model.total_chats || 0), 0)
       }, 0)
 
+    // Extract PR metrics from dotcom pull requests
+    const totalPREngagedUsers = day.copilot_dotcom_pull_requests?.total_engaged_users || 0
+
     return {
       date: day.date,
       total_active_users: day.total_active_users || 0,
@@ -54,6 +57,8 @@ export const transformGitHubData = (githubData: GitHubCopilotMetricsResponse): C
       total_chat_acceptances: totalChatInsertions,
       total_chat_turns: totalChatTurns,
       total_active_chat_users: day.copilot_ide_chat?.total_engaged_users || 0,
+      total_pr_summaries_created: totalPREngagedUsers, // Using engaged users as proxy for summaries
+      total_pr_engaged_users: totalPREngagedUsers,
     }
   })
 

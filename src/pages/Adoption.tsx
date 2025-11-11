@@ -4,12 +4,22 @@ import MetricCard from '../components/MetricCard'
 import LineChart from '../components/LineChart'
 import PieChart from '../components/PieChart'
 import BarChart from '../components/BarChart'
+import DateRangeSelector, { DateRange } from '../components/DateRangeSelector'
 import { metricsService } from '../services/api'
 import { CopilotMetricsResponse, LineChartData, ChartData } from '../types/metrics'
 
 const Adoption = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [dateRange, setDateRange] = useState<DateRange>('daily')
+
+  const getDaysToShow = () => {
+    switch (dateRange) {
+      case 'daily': return 7
+      case 'weekly': return 28
+      case 'monthly': return 90
+    }
+  }
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -29,7 +39,7 @@ const Adoption = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl">Loading adoption metrics...</div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Loading adoption metrics...</div>
       </div>
     )
   }
@@ -37,26 +47,29 @@ const Adoption = () => {
   if (!metrics) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl">Failed to load metrics</div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Failed to load metrics</div>
       </div>
     )
   }
 
-  const avgMetrics = metricsService.calculateAverageMetrics(metrics.data)
-  const latestMetrics = metrics.data[metrics.data.length - 1]
+  const daysToShow = getDaysToShow()
+  const filteredData = metrics.data.slice(-daysToShow)
+
+  const avgMetrics = metricsService.calculateAverageMetrics(filteredData)
+  const latestMetrics = filteredData[filteredData.length - 1]
   
   // Active users over time
   const userTrendData: LineChartData[] = [
     {
       id: 'Total Active Users',
-      data: metrics.data.slice(-30).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_active_users
       }))
     },
     {
       id: 'Active Chat Users',
-      data: metrics.data.slice(-30).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_active_chat_users
       }))
@@ -86,9 +99,21 @@ const Adoption = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Adoption Metrics</h1>
-        <p className="text-slate-400">User engagement and adoption patterns</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900 mb-2">Adoption Metrics</h1>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">User engagement and adoption patterns</p>
+        </div>
+        <DateRangeSelector
+          selectedRange={dateRange}
+          onRangeChange={setDateRange}
+        />
+      </div>
+
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-blue-50 border border-slate-700 dark:border-slate-700 light:border-blue-200 rounded-lg px-4 py-3">
+        <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
+          <span className="font-semibold text-white dark:text-white light:text-gray-900">Showing {getDaysToShow()} days of demo data</span>
+        </p>
       </div>
 
       {/* Metric Cards */}
@@ -145,20 +170,20 @@ const Adoption = () => {
       </div>
 
       {/* Adoption Insights */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Adoption Insights</h3>
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200">
+        <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">Adoption Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-slate-400">Adoption Highlights</h4>
-            <div className="space-y-2 text-sm text-slate-300">
-              <p><span className="font-semibold text-white">{latestMetrics.total_active_users}</span> developers actively using Copilot</p>
-              <p><span className="font-semibold text-white">{chatAdoptionRate}%</span> chat feature adoption rate</p>
-              <p><span className="font-semibold text-white">{metrics.editors?.length || 0}</span> different editors in use</p>
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">Adoption Highlights</h4>
+            <div className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
+              <p><span className="font-semibold text-white dark:text-white light:text-gray-900">{latestMetrics.total_active_users}</span> developers actively using Copilot</p>
+              <p><span className="font-semibold text-white dark:text-white light:text-gray-900">{chatAdoptionRate}%</span> chat feature adoption rate</p>
+              <p><span className="font-semibold text-white dark:text-white light:text-gray-900">{metrics.editors?.length || 0}</span> different editors in use</p>
             </div>
           </div>
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-slate-400">Growth Opportunities</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">Growth Opportunities</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-blue-400">→</span>
                 <span>Encourage non-chat users to explore chat features</span>
@@ -174,8 +199,8 @@ const Adoption = () => {
             </ul>
           </div>
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-slate-400">Success Metrics</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">Success Metrics</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-green-400">✓</span>
                 <span>Strong daily active user base</span>

@@ -2,12 +2,22 @@ import { useEffect, useState } from 'react'
 import { Zap, Target, LineChart as LineChartIcon, BarChart3 } from 'lucide-react'
 import MetricCard from '../components/MetricCard'
 import LineChart from '../components/LineChart'
+import DateRangeSelector, { DateRange } from '../components/DateRangeSelector'
 import { metricsService } from '../services/api'
 import { CopilotMetricsResponse, LineChartData } from '../types/metrics'
 
 const Performance = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [dateRange, setDateRange] = useState<DateRange>('daily')
+
+  const getDaysToShow = () => {
+    switch (dateRange) {
+      case 'daily': return 7
+      case 'weekly': return 28
+      case 'monthly': return 90
+    }
+  }
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -27,7 +37,7 @@ const Performance = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl">Loading performance metrics...</div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Loading performance metrics...</div>
       </div>
     )
   }
@@ -35,18 +45,21 @@ const Performance = () => {
   if (!metrics) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl">Failed to load metrics</div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Failed to load metrics</div>
       </div>
     )
   }
 
-  const avgMetrics = metricsService.calculateAverageMetrics(metrics.data)
+  const daysToShow = getDaysToShow()
+  const filteredData = metrics.data.slice(-daysToShow)
+
+  const avgMetrics = metricsService.calculateAverageMetrics(filteredData)
   
   // Calculate acceptance rate over time
   const acceptanceRateData: LineChartData[] = [
     {
       id: 'Acceptance Rate',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: metricsService.calculateAcceptanceRate(
           d.total_suggestions_count,
@@ -60,14 +73,14 @@ const Performance = () => {
   const linesData: LineChartData[] = [
     {
       id: 'Lines Suggested',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_lines_suggested
       }))
     },
     {
       id: 'Lines Accepted',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_lines_accepted
       }))
@@ -75,15 +88,27 @@ const Performance = () => {
   ]
 
   // Calculate line acceptance rate
-  const totalLinesSuggested = metrics.data.reduce((sum, d) => sum + d.total_lines_suggested, 0)
-  const totalLinesAccepted = metrics.data.reduce((sum, d) => sum + d.total_lines_accepted, 0)
+  const totalLinesSuggested = filteredData.reduce((sum, d) => sum + d.total_lines_suggested, 0)
+  const totalLinesAccepted = filteredData.reduce((sum, d) => sum + d.total_lines_accepted, 0)
   const lineAcceptanceRate = (totalLinesAccepted / totalLinesSuggested * 100).toFixed(1)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Performance Analytics</h1>
-        <p className="text-slate-400">Code acceptance rates and productivity metrics</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900 mb-2">Performance Analytics</h1>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">Code acceptance rates and productivity metrics</p>
+        </div>
+        <DateRangeSelector
+          selectedRange={dateRange}
+          onRangeChange={setDateRange}
+        />
+      </div>
+
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-blue-50 border border-slate-700 dark:border-slate-700 light:border-blue-200 rounded-lg px-4 py-3">
+        <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
+          <span className="font-semibold text-white dark:text-white light:text-gray-900">Showing {getDaysToShow()} days of demo data</span>
+        </p>
       </div>
 
       {/* Metric Cards */}
@@ -131,12 +156,12 @@ const Performance = () => {
       </div>
 
       {/* Performance Insights */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Performance Insights</h3>
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200">
+        <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">Performance Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-sm font-medium text-slate-400 mb-2">Key Findings</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600 mb-2">Key Findings</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-green-400">✓</span>
                 <span>Average acceptance rate of {avgMetrics.acceptanceRate.toFixed(1)}% indicates strong adoption</span>
@@ -152,8 +177,8 @@ const Performance = () => {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-slate-400 mb-2">Recommendations</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600 mb-2">Recommendations</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-yellow-400">→</span>
                 <span>Monitor acceptance rates to identify areas for improvement</span>

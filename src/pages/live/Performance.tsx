@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Zap, Target, LineChart as LineChartIcon, BarChart3, RefreshCw, AlertCircle } from 'lucide-react'
 import MetricCard from '../../components/MetricCard'
 import LineChart from '../../components/LineChart'
+import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
 import { githubApiService } from '../../services/githubApi'
 import { transformGitHubData, calculateAcceptanceRate } from '../../services/dataTransform'
 import { CopilotMetricsResponse, LineChartData } from '../../types/metrics'
@@ -10,6 +11,15 @@ const LivePerformance = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [dateRange, setDateRange] = useState<DateRange>('daily')
+
+  const getDaysToShow = () => {
+    switch (dateRange) {
+      case 'daily': return 7
+      case 'weekly': return 28
+      case 'monthly': return 90
+    }
+  }
 
   const loadMetrics = async () => {
     setLoading(true)
@@ -39,9 +49,9 @@ const LivePerformance = () => {
   if (loading && !metrics) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white text-xl flex items-center gap-3">
+        <div className="text-white dark:text-white light:text-gray-900 text-xl flex items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin" />
-          Loading live performance metrics...
+          Loading live metrics...
         </div>
       </div>
     )
@@ -55,7 +65,7 @@ const LivePerformance = () => {
             <AlertCircle className="w-6 h-6 text-yellow-400 mt-1" />
             <div>
               <h3 className="text-lg font-semibold text-yellow-400 mb-2">No Data Available</h3>
-              <p className="text-sm text-slate-300 mb-3">
+              <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700 mb-3">
                 Please download metrics data from the Admin page first.
               </p>
               <a
@@ -71,21 +81,24 @@ const LivePerformance = () => {
     )
   }
 
-  const acceptanceRate = calculateAcceptanceRate(metrics.data)
+  const daysToShow = getDaysToShow()
+  const filteredData = metrics.data.slice(-daysToShow)
+
+  const acceptanceRate = calculateAcceptanceRate(filteredData)
   
-  const totalLinesSuggested = metrics.data.reduce((sum, d) => sum + d.total_lines_suggested, 0)
-  const totalLinesAccepted = metrics.data.reduce((sum, d) => sum + d.total_lines_accepted, 0)
+  const totalLinesSuggested = filteredData.reduce((sum, d) => sum + d.total_lines_suggested, 0)
+  const totalLinesAccepted = filteredData.reduce((sum, d) => sum + d.total_lines_accepted, 0)
   const lineAcceptanceRate = totalLinesSuggested > 0 
     ? ((totalLinesAccepted / totalLinesSuggested) * 100).toFixed(1)
     : '0'
   
-  const avgLinesSuggested = Math.round(totalLinesSuggested / metrics.data.length)
-  const avgLinesAccepted = Math.round(totalLinesAccepted / metrics.data.length)
+  const avgLinesSuggested = Math.round(totalLinesSuggested / filteredData.length)
+  const avgLinesAccepted = Math.round(totalLinesAccepted / filteredData.length)
   
   const acceptanceRateData: LineChartData[] = [
     {
       id: 'Acceptance Rate',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_suggestions_count > 0 
           ? (d.total_acceptances_count / d.total_suggestions_count * 100)
@@ -97,14 +110,14 @@ const LivePerformance = () => {
   const linesData: LineChartData[] = [
     {
       id: 'Lines Suggested',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_lines_suggested
       }))
     },
     {
       id: 'Lines Accepted',
-      data: metrics.data.slice(-14).map(d => ({
+      data: filteredData.map(d => ({
         x: d.date.split('-').slice(1).join('/'),
         y: d.total_lines_accepted
       }))
@@ -116,28 +129,34 @@ const LivePerformance = () => {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-white">Live Performance Analytics</h1>
+            <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900">Live Performance Analytics</h1>
             <span className="px-3 py-1 bg-green-500 bg-opacity-20 text-green-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
               LIVE
             </span>
           </div>
-          <p className="text-slate-400">Real-time acceptance rates and productivity metrics</p>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">Real-time acceptance rates and productivity metrics</p>
         </div>
-        <button
-          onClick={loadMetrics}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <DateRangeSelector
+            selectedRange={dateRange}
+            onRangeChange={setDateRange}
+          />
+          <button
+            onClick={loadMetrics}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 light:bg-gray-200 hover:bg-slate-600 dark:hover:bg-slate-600 light:hover:bg-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-3">
-        <p className="text-sm text-slate-300">
-          <span className="font-semibold text-white">Last updated:</span>{' '}
-          {lastRefresh.toLocaleString()}
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-green-50 border border-slate-700 dark:border-slate-700 light:border-green-200 rounded-lg px-4 py-3">
+        <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
+          <span className="font-semibold text-white dark:text-white light:text-gray-900">Last updated:</span>{' '}
+          {lastRefresh.toLocaleString()} • Showing {getDaysToShow()} days of data
         </p>
       </div>
 
@@ -186,12 +205,12 @@ const LivePerformance = () => {
       </div>
 
       {/* Performance Insights */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Performance Insights</h3>
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-white rounded-lg p-6 border border-slate-700 dark:border-slate-700 light:border-gray-200">
+        <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 mb-4">Performance Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-sm font-medium text-slate-400 mb-2">Key Findings</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600 mb-2">Key Findings</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-green-400">✓</span>
                 <span>Average acceptance rate of {acceptanceRate.toFixed(1)}% indicates strong adoption</span>
@@ -207,8 +226,8 @@ const LivePerformance = () => {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-slate-400 mb-2">Recommendations</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
+            <h4 className="text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600 mb-2">Recommendations</h4>
+            <ul className="space-y-2 text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-yellow-400">→</span>
                 <span>Monitor acceptance rates to identify areas for improvement</span>
