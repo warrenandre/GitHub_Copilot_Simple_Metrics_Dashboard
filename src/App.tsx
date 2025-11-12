@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
+import Home from './pages/Home'
 import Overview from './pages/demo/Overview'
 import Usage from './pages/demo/Usage'
 import Performance from './pages/demo/Performance'
@@ -16,11 +17,14 @@ function App() {
     <ThemeProvider>
       <Layout>
         <Routes>
+          {/* Home Route */}
+          <Route path="/" element={<Home />} />
+          
           {/* Demo Routes */}
-          <Route path="/" element={<Overview />} />
-          <Route path="/usage" element={<Usage />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/adoption" element={<Adoption />} />
+          <Route path="/demo" element={<Overview />} />
+          <Route path="/demo/usage" element={<Usage />} />
+          <Route path="/demo/performance" element={<Performance />} />
+          <Route path="/demo/adoption" element={<Adoption />} />
           
           {/* Live Routes */}
           <Route path="/live" element={<LiveOverview />} />

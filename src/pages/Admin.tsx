@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, Save, Trash2, Settings, AlertCircle, CheckCircle, Info } from 'lucide-react'
+import { Save, Trash2, Settings, AlertCircle, CheckCircle, Info } from 'lucide-react'
 import { githubApiService } from '../services/githubApi'
 import { loadApiConfig, saveApiConfig, validateApiConfig } from '../config/apiConfig'
 import { APIConfig, DownloadResult } from '../types/metrics'
@@ -14,10 +14,11 @@ const Admin = () => {
   })
   
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<DownloadResult | null>(null)
-  const [agentsResult, setAgentsResult] = useState<DownloadResult | null>(null)
+  const [enterpriseMetricsResult, setEnterpriseMetricsResult] = useState<DownloadResult | null>(null)
+  const [enterpriseSeatsResult, setEnterpriseSeatsResult] = useState<DownloadResult | null>(null)
+  const [orgMetricsResult, setOrgMetricsResult] = useState<DownloadResult | null>(null)
+  const [orgSeatsResult, setOrgSeatsResult] = useState<DownloadResult | null>(null)
   const [dataStats, setDataStats] = useState<ReturnType<typeof githubApiService.getDataStats>>(null)
-  const [agentsStats, setAgentsStats] = useState<ReturnType<typeof githubApiService.getAgentsDataStats>>(null)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
@@ -34,7 +35,6 @@ const Admin = () => {
 
   const updateDataStats = () => {
     setDataStats(githubApiService.getDataStats())
-    setAgentsStats(githubApiService.getAgentsDataStats())
     setLastSaved(githubApiService.getLastSavedTimestamp())
   }
 
@@ -44,12 +44,12 @@ const Admin = () => {
     setValidationErrors([])
   }
 
-  const handleDownloadAndSave = async () => {
+  const handleDownloadEnterpriseMetrics = async () => {
     // Validate configuration
     const validation = validateApiConfig(config)
     if (!validation.valid) {
       setValidationErrors(validation.errors)
-      setResult({
+      setEnterpriseMetricsResult({
         success: false,
         message: 'Please fix validation errors before proceeding',
       })
@@ -57,26 +57,25 @@ const Admin = () => {
     }
 
     setLoading(true)
-    setResult(null)
+    setEnterpriseMetricsResult(null)
     setValidationErrors([])
 
     const downloadResult = await githubApiService.downloadAndSave(config)
-    setResult(downloadResult)
+    setEnterpriseMetricsResult(downloadResult)
     setLoading(false)
 
     if (downloadResult.success) {
-      // Save config to config file (without token for security)
       saveApiConfig(config)
       updateDataStats()
     }
   }
 
-  const handleExportToFile = async () => {
+  const handleDownloadEnterpriseSeats = async () => {
     // Validate configuration
     const validation = validateApiConfig(config)
     if (!validation.valid) {
       setValidationErrors(validation.errors)
-      setResult({
+      setEnterpriseSeatsResult({
         success: false,
         message: 'Please fix validation errors before proceeding',
       })
@@ -84,35 +83,67 @@ const Admin = () => {
     }
 
     setLoading(true)
-    setResult(null)
+    setEnterpriseSeatsResult(null)
     setValidationErrors([])
 
-    const exportResult = await githubApiService.downloadAsFile(config)
-    setResult(exportResult)
-    setLoading(false)
-  }
-
-  const handleDownloadAgents = async () => {
-    // Validate configuration
-    const validation = validateApiConfig(config)
-    if (!validation.valid) {
-      setValidationErrors(validation.errors)
-      setAgentsResult({
-        success: false,
-        message: 'Please fix validation errors before proceeding',
-      })
-      return
-    }
-
-    setLoading(true)
-    setAgentsResult(null)
-    setValidationErrors([])
-
-    const downloadResult = await githubApiService.downloadAndSaveAgents(config)
-    setAgentsResult(downloadResult)
+    const downloadResult = await githubApiService.downloadAndSave(config)
+    setEnterpriseSeatsResult(downloadResult)
     setLoading(false)
 
     if (downloadResult.success) {
+      saveApiConfig(config)
+      updateDataStats()
+    }
+  }
+
+  const handleDownloadOrgMetrics = async () => {
+    // Validate configuration
+    const validation = validateApiConfig(config)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      setOrgMetricsResult({
+        success: false,
+        message: 'Please fix validation errors before proceeding',
+      })
+      return
+    }
+
+    setLoading(true)
+    setOrgMetricsResult(null)
+    setValidationErrors([])
+
+    const downloadResult = await githubApiService.downloadAndSave(config)
+    setOrgMetricsResult(downloadResult)
+    setLoading(false)
+
+    if (downloadResult.success) {
+      saveApiConfig(config)
+      updateDataStats()
+    }
+  }
+
+  const handleDownloadOrgSeats = async () => {
+    // Validate configuration
+    const validation = validateApiConfig(config)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      setOrgSeatsResult({
+        success: false,
+        message: 'Please fix validation errors before proceeding',
+      })
+      return
+    }
+
+    setLoading(true)
+    setOrgSeatsResult(null)
+    setValidationErrors([])
+
+    const downloadResult = await githubApiService.downloadAndSave(config)
+    setOrgSeatsResult(downloadResult)
+    setLoading(false)
+
+    if (downloadResult.success) {
+      saveApiConfig(config)
       updateDataStats()
     }
   }
@@ -120,13 +151,14 @@ const Admin = () => {
   const handleClearData = () => {
     if (confirm('Are you sure you want to clear all saved metrics data?')) {
       githubApiService.clearLocalStorage()
-      githubApiService.clearAgentsLocalStorage()
       updateDataStats()
-      setResult({
+      setEnterpriseMetricsResult({
         success: true,
         message: 'Local data cleared successfully',
       })
-      setAgentsResult(null)
+      setEnterpriseSeatsResult(null)
+      setOrgMetricsResult(null)
+      setOrgSeatsResult(null)
     }
   }
 
@@ -173,27 +205,6 @@ const Admin = () => {
                   Last saved: {new Date(lastSaved).toLocaleString()}
                 </p>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Current Agents Data Status */}
-      {agentsStats && (
-        <div className="bg-purple-500 bg-opacity-10 border border-purple-500 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-purple-400 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-purple-400 mb-1">Agents Data Available</h3>
-              <p className="text-sm text-slate-300">
-                <strong>{agentsStats.count}</strong> days of agents metrics stored locally
-              </p>
-              <p className="text-sm text-slate-300">
-                Date range: <strong>{agentsStats.dateRange.from}</strong> to <strong>{agentsStats.dateRange.to}</strong>
-              </p>
-              <p className="text-sm text-slate-300">
-                Total agents tracked: <strong>{agentsStats.totalAgents}</strong>
-              </p>
             </div>
           </div>
         </div>
@@ -305,52 +316,61 @@ const Admin = () => {
 
       {/* Actions */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h2 className="text-xl font-semibold text-white mb-4">Copilot Metrics Actions</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Enterprise Copilot Data</h2>
         
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={handleDownloadAndSave}
+            onClick={handleDownloadEnterpriseMetrics}
             disabled={loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
-            {loading ? 'Downloading...' : 'Download Metrics Data'}
+            {loading ? 'Downloading...' : 'Download Metrics'}
           </button>
 
           <button
-            onClick={handleExportToFile}
+            onClick={handleDownloadEnterpriseSeats}
             disabled={loading || !config.org || !config.token}
-            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
-            <Download className="w-5 h-5" />
-            Export Metrics to JSON
+            <Save className="w-5 h-5" />
+            {loading ? 'Downloading...' : 'Download Seats'}
           </button>
         </div>
 
         <div className="mt-4 text-sm text-slate-400">
-          <p><strong>Download Metrics Data:</strong> Fetches usage metrics from GitHub API and stores it in browser local storage</p>
-          <p className="mt-1"><strong>Export Metrics to JSON:</strong> Downloads the metrics data as a JSON file to your computer</p>
+          <p><strong>Download Metrics:</strong> Fetches enterprise-level Copilot usage metrics and performance data</p>
+          <p className="mt-1"><strong>Download Seats:</strong> Fetches individual seat-level data including per-user usage and productivity stats</p>
         </div>
       </div>
 
-      {/* Agents Actions */}
+      {/* Organization Metrics */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h2 className="text-xl font-semibold text-white mb-4">Copilot Agents Actions</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Organization Copilot Data</h2>
         
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={handleDownloadAgents}
+            onClick={handleDownloadOrgMetrics}
             disabled={loading || !config.org || !config.token}
-            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
-            {loading ? 'Downloading...' : 'Download Agents Data'}
+            {loading ? 'Downloading...' : 'Download Metrics'}
+          </button>
+
+          <button
+            onClick={handleDownloadOrgSeats}
+            disabled={loading || !config.org || !config.token}
+            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+          >
+            <Save className="w-5 h-5" />
+            {loading ? 'Downloading...' : 'Download Seats'}
           </button>
         </div>
 
         <div className="mt-4 text-sm text-slate-400">
-          <p><strong>Download Agents Data:</strong> Fetches Copilot Agents metrics from GitHub API and stores it locally</p>
-          <p className="mt-1">This includes agent usage, engagement, and adoption metrics across your enterprise</p>
+          <p><strong>Download Metrics:</strong> Fetches organization-specific Copilot metrics (filtered by organization/team)</p>
+          <p className="mt-1"><strong>Download Seats:</strong> Fetches seat-level data for the organization, with optional team filtering</p>
         </div>
       </div>
 
@@ -358,7 +378,8 @@ const Admin = () => {
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
         <h2 className="text-xl font-semibold text-white mb-4">Data Management</h2>
         
-        <div className="flex flex-wrap gap-3">{(dataStats || agentsStats) && (
+        <div className="flex flex-wrap gap-3">
+          {dataStats && (
             <button
               onClick={handleClearData}
               disabled={loading}
@@ -371,80 +392,156 @@ const Admin = () => {
         </div>
 
         <div className="mt-4 text-sm text-slate-400">
-          <p><strong>Clear All Local Data:</strong> Removes all saved metrics and agents data from browser local storage</p>
+          <p><strong>Clear All Local Data:</strong> Removes all saved metrics data from browser local storage</p>
         </div>
       </div>
 
-      {/* Metrics Result Message */}
-      {result && (
+      {/* Enterprise Metrics Result Message */}
+      {enterpriseMetricsResult && (
         <div className={`rounded-lg p-4 border ${
-          result.success
-            ? 'bg-green-500 bg-opacity-10 border-green-500'
+          enterpriseMetricsResult.success
+            ? 'bg-blue-500 bg-opacity-10 border-blue-500'
             : 'bg-red-500 bg-opacity-10 border-red-500'
         }`}>
           <div className="flex items-start gap-3">
-            {result.success ? (
-              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
+            {enterpriseMetricsResult.success ? (
+              <CheckCircle className="w-5 h-5 text-blue-400 mt-0.5" />
             ) : (
               <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
             )}
             <div className="flex-1">
               <h3 className={`text-sm font-semibold mb-1 ${
-                result.success ? 'text-green-400' : 'text-red-400'
+                enterpriseMetricsResult.success ? 'text-blue-400' : 'text-red-400'
               }`}>
-                {result.success ? 'Success' : 'Error'}
+                {enterpriseMetricsResult.success ? 'Enterprise Metrics Success' : 'Enterprise Metrics Error'}
               </h3>
-              <p className="text-sm text-slate-300">{result.message}</p>
-              {result.recordCount && (
+              <p className="text-sm text-slate-300">{enterpriseMetricsResult.message}</p>
+              {enterpriseMetricsResult.recordCount && (
                 <p className="text-sm text-slate-300 mt-1">
-                  Records downloaded: <strong>{result.recordCount}</strong>
+                  Records downloaded: <strong>{enterpriseMetricsResult.recordCount}</strong>
                 </p>
               )}
-              {result.dateRange && (
+              {enterpriseMetricsResult.dateRange && (
                 <p className="text-sm text-slate-300">
-                  Date range: <strong>{result.dateRange.from}</strong> to <strong>{result.dateRange.to}</strong>
+                  Date range: <strong>{enterpriseMetricsResult.dateRange.from}</strong> to <strong>{enterpriseMetricsResult.dateRange.to}</strong>
                 </p>
               )}
-              {result.error && (
-                <p className="text-xs text-slate-400 mt-2 font-mono">{result.error}</p>
+              {enterpriseMetricsResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{enterpriseMetricsResult.error}</p>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Agents Result Message */}
-      {agentsResult && (
+      {/* Enterprise Seats Result Message */}
+      {enterpriseSeatsResult && (
         <div className={`rounded-lg p-4 border ${
-          agentsResult.success
-            ? 'bg-purple-500 bg-opacity-10 border-purple-500'
+          enterpriseSeatsResult.success
+            ? 'bg-blue-500 bg-opacity-10 border-blue-500'
             : 'bg-red-500 bg-opacity-10 border-red-500'
         }`}>
           <div className="flex items-start gap-3">
-            {agentsResult.success ? (
-              <CheckCircle className="w-5 h-5 text-purple-400 mt-0.5" />
+            {enterpriseSeatsResult.success ? (
+              <CheckCircle className="w-5 h-5 text-blue-400 mt-0.5" />
             ) : (
               <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
             )}
             <div className="flex-1">
               <h3 className={`text-sm font-semibold mb-1 ${
-                agentsResult.success ? 'text-purple-400' : 'text-red-400'
+                enterpriseSeatsResult.success ? 'text-blue-400' : 'text-red-400'
               }`}>
-                {agentsResult.success ? 'Agents Data Success' : 'Agents Data Error'}
+                {enterpriseSeatsResult.success ? 'Enterprise Seats Success' : 'Enterprise Seats Error'}
               </h3>
-              <p className="text-sm text-slate-300">{agentsResult.message}</p>
-              {agentsResult.recordCount && (
+              <p className="text-sm text-slate-300">{enterpriseSeatsResult.message}</p>
+              {enterpriseSeatsResult.recordCount && (
                 <p className="text-sm text-slate-300 mt-1">
-                  Records downloaded: <strong>{agentsResult.recordCount}</strong>
+                  Records downloaded: <strong>{enterpriseSeatsResult.recordCount}</strong>
                 </p>
               )}
-              {agentsResult.dateRange && (
+              {enterpriseSeatsResult.dateRange && (
                 <p className="text-sm text-slate-300">
-                  Date range: <strong>{agentsResult.dateRange.from}</strong> to <strong>{agentsResult.dateRange.to}</strong>
+                  Date range: <strong>{enterpriseSeatsResult.dateRange.from}</strong> to <strong>{enterpriseSeatsResult.dateRange.to}</strong>
                 </p>
               )}
-              {agentsResult.error && (
-                <p className="text-xs text-slate-400 mt-2 font-mono">{agentsResult.error}</p>
+              {enterpriseSeatsResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{enterpriseSeatsResult.error}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Organization Metrics Result Message */}
+      {orgMetricsResult && (
+        <div className={`rounded-lg p-4 border ${
+          orgMetricsResult.success
+            ? 'bg-green-500 bg-opacity-10 border-green-500'
+            : 'bg-red-500 bg-opacity-10 border-red-500'
+        }`}>
+          <div className="flex items-start gap-3">
+            {orgMetricsResult.success ? (
+              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <h3 className={`text-sm font-semibold mb-1 ${
+                orgMetricsResult.success ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {orgMetricsResult.success ? 'Organization Metrics Success' : 'Organization Metrics Error'}
+              </h3>
+              <p className="text-sm text-slate-300">{orgMetricsResult.message}</p>
+              {orgMetricsResult.recordCount && (
+                <p className="text-sm text-slate-300 mt-1">
+                  Records downloaded: <strong>{orgMetricsResult.recordCount}</strong>
+                </p>
+              )}
+              {orgMetricsResult.dateRange && (
+                <p className="text-sm text-slate-300">
+                  Date range: <strong>{orgMetricsResult.dateRange.from}</strong> to <strong>{orgMetricsResult.dateRange.to}</strong>
+                </p>
+              )}
+              {orgMetricsResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{orgMetricsResult.error}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Organization Seats Result Message */}
+      {orgSeatsResult && (
+        <div className={`rounded-lg p-4 border ${
+          orgSeatsResult.success
+            ? 'bg-green-500 bg-opacity-10 border-green-500'
+            : 'bg-red-500 bg-opacity-10 border-red-500'
+        }`}>
+          <div className="flex items-start gap-3">
+            {orgSeatsResult.success ? (
+              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <h3 className={`text-sm font-semibold mb-1 ${
+                orgSeatsResult.success ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {orgSeatsResult.success ? 'Organization Seats Success' : 'Organization Seats Error'}
+              </h3>
+              <p className="text-sm text-slate-300">{orgSeatsResult.message}</p>
+              {orgSeatsResult.recordCount && (
+                <p className="text-sm text-slate-300 mt-1">
+                  Records downloaded: <strong>{orgSeatsResult.recordCount}</strong>
+                </p>
+              )}
+              {orgSeatsResult.dateRange && (
+                <p className="text-sm text-slate-300">
+                  Date range: <strong>{orgSeatsResult.dateRange.from}</strong> to <strong>{orgSeatsResult.dateRange.to}</strong>
+                </p>
+              )}
+              {orgSeatsResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{orgSeatsResult.error}</p>
               )}
             </div>
           </div>
@@ -456,61 +553,102 @@ const Admin = () => {
         <h2 className="text-xl font-semibold text-white mb-4">API Documentation</h2>
         
         <div className="space-y-4">
-          {/* Metrics API */}
+          {/* Enterprise Section */}
           <div className="space-y-3 text-sm text-slate-300">
-            <h3 className="text-lg font-semibold text-white">Copilot Metrics API</h3>
-            <p>
-              <strong>Endpoint:</strong>{' '}
-              <code className="bg-slate-900 px-2 py-1 rounded text-blue-400">
-                GET /enterprises/{'{enterprise}'}/copilot/metrics
-              </code>
-            </p>
+            <h3 className="text-lg font-semibold text-white">Enterprise Level</h3>
             
-            <div>
-              <p className="font-semibold mb-2">Requirements:</p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Enterprise must have 5+ members with active Copilot licenses</li>
-                <li>Copilot Metrics API access policy must be enabled</li>
-                <li>Only enterprise owners can access this endpoint</li>
-                <li>Maximum of 100 days of historical data available</li>
-              </ul>
+            <div className="ml-4 space-y-3">
+              <div>
+                <p className="font-semibold text-blue-400">Enterprise Metrics</p>
+                <p>
+                  <strong>Endpoint:</strong>{' '}
+                  <code className="bg-slate-900 px-2 py-1 rounded text-blue-400">
+                    GET /enterprises/{'{enterprise}'}/copilot/metrics
+                  </code>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2 mt-1">
+                  <li>Enterprise-wide usage and adoption trends</li>
+                  <li>Aggregate acceptance rates and performance metrics</li>
+                  <li>Overall code suggestions and completions</li>
+                  <li>Active user counts and engagement statistics</li>
+                </ul>
+              </div>
+
+              <div>
+                <p className="font-semibold text-blue-400">Enterprise Seats</p>
+                <p>
+                  <strong>Endpoint:</strong>{' '}
+                  <code className="bg-slate-900 px-2 py-1 rounded text-blue-400">
+                    GET /enterprises/{'{enterprise}'}/copilot/billing/seats
+                  </code>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2 mt-1">
+                  <li>Lists all Copilot seat assignments across the enterprise</li>
+                  <li>Seat assignments from multiple organizations or enterprise teams</li>
+                  <li>Individual user activity and telemetry data</li>
+                  <li>Seat status (active, pending cancellation)</li>
+                  <li>Last activity editor and authentication timestamps</li>
+                  <li>Users counted once even with multiple organization access</li>
+                </ul>
+              </div>
             </div>
           </div>
 
-          {/* Agents API */}
+          {/* Organization Section */}
           <div className="space-y-3 text-sm text-slate-300 pt-4 border-t border-slate-700">
-            <h3 className="text-lg font-semibold text-white">Copilot Agents API</h3>
-            <p>
-              <strong>Endpoint:</strong>{' '}
-              <code className="bg-slate-900 px-2 py-1 rounded text-purple-400">
-                GET /enterprises/{'{enterprise}'}/copilot/agents
-              </code>
-            </p>
+            <h3 className="text-lg font-semibold text-white">Organization Level</h3>
             
-            <div>
-              <p className="font-semibold mb-2">What It Provides:</p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Agent usage metrics across the enterprise</li>
-                <li>Individual agent engagement statistics</li>
-                <li>Chat interactions with agents</li>
-                <li>Code insertion and copy events from agent suggestions</li>
-                <li>Agent adoption trends over time</li>
-              </ul>
-            </div>
+            <div className="ml-4 space-y-3">
+              <div>
+                <p className="font-semibold text-green-400">Organization Metrics</p>
+                <p>
+                  <strong>Endpoint:</strong>{' '}
+                  <code className="bg-slate-900 px-2 py-1 rounded text-green-400">
+                    GET /orgs/{'{org}'}/copilot/metrics
+                  </code>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2 mt-1">
+                  <li>Organization-level Copilot usage metrics</li>
+                  <li>Team-specific data when team_slug parameter is provided</li>
+                  <li>Organization-scoped acceptance rates and performance</li>
+                  <li>Usage patterns filtered by organization</li>
+                </ul>
+              </div>
 
-            <div>
-              <p className="font-semibold mb-2">Requirements:</p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Same authentication requirements as Metrics API</li>
-                <li>Copilot Agents must be enabled for the enterprise</li>
-                <li>Note: This endpoint may be in beta or limited availability</li>
-              </ul>
+              <div>
+                <p className="font-semibold text-green-400">Organization Seats</p>
+                <p>
+                  <strong>Endpoint:</strong>{' '}
+                  <code className="bg-slate-900 px-2 py-1 rounded text-green-400">
+                    GET /orgs/{'{org}'}/copilot/billing/seats
+                  </code>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2 mt-1">
+                  <li>Lists all Copilot seat assignments for the organization</li>
+                  <li>Per-user seat details including activity and status</li>
+                  <li>Most recent Copilot activity per assigned user</li>
+                  <li>Seat creation, update, and cancellation dates</li>
+                  <li>Assigning team information for each seat</li>
+                  <li>Supports pagination (page, per_page parameters)</li>
+                </ul>
+              </div>
             </div>
+          </div>
+
+          {/* General Requirements */}
+          <div className="pt-4 border-t border-slate-700">
+            <p className="font-semibold mb-2">Requirements (All APIs):</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Enterprise must have 5+ members with active Copilot licenses</li>
+              <li>Copilot Metrics API access policy must be enabled</li>
+              <li>Only enterprise/organization owners can access these endpoints</li>
+              <li>Maximum of 100 days of historical data available</li>
+            </ul>
           </div>
 
           {/* Token Permissions */}
           <div className="pt-4 border-t border-slate-700">
-            <p className="font-semibold mb-2">Token Permissions (Both APIs):</p>
+            <p className="font-semibold mb-2">Token Permissions:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><code className="bg-slate-900 px-1 rounded">manage_billing:copilot</code></li>
               <li><code className="bg-slate-900 px-1 rounded">read:org</code></li>

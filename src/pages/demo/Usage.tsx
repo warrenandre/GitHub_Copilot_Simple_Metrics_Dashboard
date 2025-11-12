@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Activity, MessageSquare, Zap } from 'lucide-react'
-import MetricCard from '../components/MetricCard'
-import LineChart from '../components/LineChart'
-import BarChart from '../components/BarChart'
-import DateRangeSelector, { DateRange } from '../components/DateRangeSelector'
-import { metricsService } from '../services/api'
-import { CopilotMetricsResponse, LineChartData } from '../types/metrics'
+import MetricCard from '../../components/MetricCard'
+import LineChart from '../../components/LineChart'
+import BarChart from '../../components/BarChart'
+import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
+import { metricsService } from '../../services/api'
+import { CopilotMetricsResponse, LineChartData } from '../../types/metrics'
 
 const Usage = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
