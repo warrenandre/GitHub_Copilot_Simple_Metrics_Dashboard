@@ -4,7 +4,19 @@ A modern, responsive React application for visualizing GitHub Copilot metrics an
 
 ![GitHub Copilot Dashboard](https://img.shields.io/badge/React-18.2-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue) ![Vite](https://img.shields.io/badge/Vite-5.0-purple)
 
-## 🚀 Live Demo
+## � Screenshots
+
+### Enterprise 28-Day Report
+Comprehensive 28-day metrics visualization with daily activity trends, feature usage breakdown, language statistics, and lines of code analysis.
+
+![28-Day Report](screenshots/28DayReport.png)
+
+### Copilot Seats Management
+View and manage GitHub Copilot seat assignments with detailed information about active users, teams, plan types, and editor distribution.
+
+![Seats Management](screenshots/seats_screenshot.png)
+
+## �🚀 Live Demo
 
 **Try it out:** [View Demo Dashboard](https://app-ghcp-simple-metrics-dashboard-demo.azurewebsites.net/)
 
