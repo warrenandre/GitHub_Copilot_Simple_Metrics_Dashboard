@@ -15,6 +15,10 @@ import LiveSeats from './pages/live/Seats'
 import Admin from './pages/Admin'
 import EnterpriseSeats from './pages/enterprise/Seats'
 import EnterpriseDemoSeats from './pages/enterprise/DemoSeats'
+import EnterpriseOverview from './pages/enterprise/Overview'
+import EnterpriseUsage from './pages/enterprise/Usage'
+import EnterprisePerformance from './pages/enterprise/Performance'
+import EnterpriseAdoption from './pages/enterprise/Adoption'
 
 function App() {
   return (
@@ -41,6 +45,10 @@ function App() {
           {/* Enterprise Routes */}
           <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
           <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
+          <Route path="/enterprise/overview" element={<EnterpriseOverview />} />
+          <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
+          <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
+          <Route path="/enterprise/adoption" element={<EnterpriseAdoption />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />

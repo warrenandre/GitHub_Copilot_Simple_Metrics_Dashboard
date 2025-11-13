@@ -193,13 +193,30 @@ const Admin = () => {
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-400 mt-0.5" />
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-blue-400 mb-1">Local Data Available</h3>
-              <p className="text-sm text-slate-300">
-                <strong>{dataStats.count}</strong> days of metrics stored locally
-              </p>
-              <p className="text-sm text-slate-300">
-                Date range: <strong>{dataStats.dateRange.from}</strong> to <strong>{dataStats.dateRange.to}</strong>
-              </p>
+              <h3 className="text-sm font-semibold text-blue-400 mb-2">Local Data Available</h3>
+              
+              {dataStats.enterprise && (
+                <div className="mb-2">
+                  <p className="text-sm text-slate-300">
+                    <strong>Enterprise:</strong> {dataStats.enterprise.count} days of metrics
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Date range: {dataStats.enterprise.dateRange.from} to {dataStats.enterprise.dateRange.to}
+                  </p>
+                </div>
+              )}
+              
+              {dataStats.organization && (
+                <div className="mb-2">
+                  <p className="text-sm text-slate-300">
+                    <strong>Organization:</strong> {dataStats.organization.count} days of metrics
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Date range: {dataStats.organization.dateRange.from} to {dataStats.organization.dateRange.to}
+                  </p>
+                </div>
+              )}
+              
               {lastSaved && (
                 <p className="text-xs text-slate-400 mt-1">
                   Last saved: {new Date(lastSaved).toLocaleString()}

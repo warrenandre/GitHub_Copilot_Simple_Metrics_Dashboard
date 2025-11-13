@@ -4,6 +4,8 @@ class GitHubCopilotAPIService {
   private readonly baseUrl = 'https://api.github.com'
   private readonly apiVersion = '2022-11-28'
   private readonly localStorageKey = 'copilot_metrics_data'
+  private readonly enterpriseMetricsKey = 'copilot_enterprise_metrics_data'
+  private readonly orgMetricsKey = 'copilot_org_metrics_data'
   private readonly agentsStorageKey = 'copilot_agents_data'
   private readonly configStorageKey = 'copilot_api_config'
   private readonly dataFolderPath = '/data' // Public folder path for storing data files
@@ -445,8 +447,8 @@ class GitHubCopilotAPIService {
           }
         }
 
-        // Save to local storage
-        this.saveToLocalStorage(data)
+        // Save to local storage with level parameter
+        this.saveToLocalStorage(data, level)
 
         // Save to local file with level in filename
         const timestamp = new Date().toISOString().split('T')[0]
@@ -562,11 +564,20 @@ class GitHubCopilotAPIService {
   /**
    * Save data to local storage
    */
-  saveToLocalStorage(data: GitHubCopilotMetricsResponse): void {
+  saveToLocalStorage(data: GitHubCopilotMetricsResponse, level: 'enterprise' | 'organization' = 'enterprise'): void {
     try {
       const jsonStr = JSON.stringify(data)
-      localStorage.setItem(this.localStorageKey, jsonStr)
-      localStorage.setItem(`${this.localStorageKey}_timestamp`, new Date().toISOString())
+      const storageKey = level === 'enterprise' ? this.enterpriseMetricsKey : this.orgMetricsKey
+      
+      // Save to level-specific key
+      localStorage.setItem(storageKey, jsonStr)
+      localStorage.setItem(`${storageKey}_timestamp`, new Date().toISOString())
+      
+      // Also save to legacy key for backward compatibility (use enterprise as default)
+      if (level === 'enterprise') {
+        localStorage.setItem(this.localStorageKey, jsonStr)
+        localStorage.setItem(`${this.localStorageKey}_timestamp`, new Date().toISOString())
+      }
     } catch (error) {
       console.error('Failed to save to local storage:', error)
       throw new Error('Failed to save data to local storage')
@@ -657,10 +668,26 @@ class GitHubCopilotAPIService {
   /**
    * Load data from local storage
    */
-  loadFromLocalStorage(): GitHubCopilotMetricsResponse | null {
+  loadFromLocalStorage(level?: 'enterprise' | 'organization'): GitHubCopilotMetricsResponse | null {
     try {
-      const jsonStr = localStorage.getItem(this.localStorageKey)
-      if (!jsonStr) return null
+      let storageKey = this.localStorageKey
+      
+      // If level specified, use level-specific key
+      if (level === 'enterprise') {
+        storageKey = this.enterpriseMetricsKey
+      } else if (level === 'organization') {
+        storageKey = this.orgMetricsKey
+      }
+      
+      const jsonStr = localStorage.getItem(storageKey)
+      if (!jsonStr) {
+        // Fallback to legacy key if level-specific not found
+        if (level) {
+          const legacyData = localStorage.getItem(this.localStorageKey)
+          if (legacyData) return JSON.parse(legacyData) as GitHubCopilotMetricsResponse
+        }
+        return null
+      }
       return JSON.parse(jsonStr) as GitHubCopilotMetricsResponse
     } catch (error) {
       console.error('Failed to load from local storage:', error)
@@ -679,9 +706,17 @@ class GitHubCopilotAPIService {
    * Clear saved data
    */
   clearLocalStorage(): void {
-    // Clear metrics data
+    // Clear legacy metrics data
     localStorage.removeItem(this.localStorageKey)
     localStorage.removeItem(`${this.localStorageKey}_timestamp`)
+    
+    // Clear enterprise metrics data
+    localStorage.removeItem(this.enterpriseMetricsKey)
+    localStorage.removeItem(`${this.enterpriseMetricsKey}_timestamp`)
+    
+    // Clear organization metrics data
+    localStorage.removeItem(this.orgMetricsKey)
+    localStorage.removeItem(`${this.orgMetricsKey}_timestamp`)
     
     // Clear agents data
     localStorage.removeItem(this.agentsStorageKey)
@@ -723,23 +758,58 @@ class GitHubCopilotAPIService {
    * Check if local data exists
    */
   hasLocalData(): boolean {
-    return !!localStorage.getItem(this.localStorageKey)
+    return !!localStorage.getItem(this.localStorageKey) || 
+           !!localStorage.getItem(this.enterpriseMetricsKey) ||
+           !!localStorage.getItem(this.orgMetricsKey)
   }
 
   /**
    * Get data statistics
    */
-  getDataStats(): { count: number; dateRange: { from: string; to: string } } | null {
-    const data = this.loadFromLocalStorage()
-    if (!data || data.length === 0) return null
+  getDataStats(): { 
+    enterprise?: { count: number; dateRange: { from: string; to: string } }
+    organization?: { count: number; dateRange: { from: string; to: string } }
+    count: number
+    dateRange: { from: string; to: string }
+  } | null {
+    const enterpriseData = this.loadFromLocalStorage('enterprise')
+    const orgData = this.loadFromLocalStorage('organization')
+    
+    if (!enterpriseData && !orgData) return null
 
-    return {
-      count: data.length,
-      dateRange: {
-        from: data[0]?.date || 'unknown',
-        to: data[data.length - 1]?.date || 'unknown',
-      },
+    const result: any = {}
+    
+    if (enterpriseData && enterpriseData.length > 0) {
+      result.enterprise = {
+        count: enterpriseData.length,
+        dateRange: {
+          from: enterpriseData[0]?.date || 'unknown',
+          to: enterpriseData[enterpriseData.length - 1]?.date || 'unknown',
+        }
+      }
     }
+    
+    if (orgData && orgData.length > 0) {
+      result.organization = {
+        count: orgData.length,
+        dateRange: {
+          from: orgData[0]?.date || 'unknown',
+          to: orgData[orgData.length - 1]?.date || 'unknown',
+        }
+      }
+    }
+    
+    // For backward compatibility, use enterprise data as default
+    const defaultData = enterpriseData || orgData
+    if (defaultData && defaultData.length > 0) {
+      result.count = defaultData.length
+      result.dateRange = {
+        from: defaultData[0]?.date || 'unknown',
+        to: defaultData[defaultData.length - 1]?.date || 'unknown',
+      }
+    }
+    
+    return result
   }
 }
 

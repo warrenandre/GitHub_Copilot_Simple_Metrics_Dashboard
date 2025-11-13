@@ -40,7 +40,14 @@ const EnterpriseSeats = () => {
 
       if (data) {
         const parsedData = JSON.parse(data)
-        setSeatsData(parsedData)
+        // Handle both wrapped and unwrapped data formats
+        if (parsedData.data) {
+          // New format with metadata wrapper
+          setSeatsData(parsedData.data)
+        } else {
+          // Old format without wrapper
+          setSeatsData(parsedData)
+        }
         setLastUpdated(timestamp)
       } else {
         setError('No enterprise seats data available')
