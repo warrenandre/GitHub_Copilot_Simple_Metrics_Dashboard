@@ -4,16 +4,37 @@ A modern, responsive React application for visualizing GitHub Copilot metrics an
 
 ![GitHub Copilot Dashboard](https://img.shields.io/badge/React-18.2-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue) ![Vite](https://img.shields.io/badge/Vite-5.0-purple)
 
+## 🚀 Live Demo
+
+**Try it out:** [View Demo Dashboard](https://app-ghcp-simple-metrics-dashboard-demo.azurewebsites.net/)
+
+Explore the full dashboard with sample data - no GitHub token required! The demo includes:
+- **Enterprise Metrics Demo** - Overview, Usage, Performance, Adoption, and Seats pages with realistic sample data
+- **Organization Metrics Demo** - Complete set of demo visualizations
+- **Admin Demo Mode** - View the configuration interface (inputs disabled in demo)
+
+> **Note:** The demo site uses sample data. To view your organization's real metrics, follow the setup instructions below.
+
 ## Features
 
 ✨ **Modern UI** - Clean, dark-themed interface with smooth transitions
 📊 **Rich Visualizations** - Interactive charts using Nivo (Line, Bar, Pie charts)
 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
 🎯 **Multiple Dashboards** - Organized by metric categories:
-  - **Overview** - Key metrics and high-level insights
-  - **Usage Metrics** - Detailed usage patterns and trends
-  - **Performance** - Acceptance rates and productivity metrics
-  - **Adoption** - User engagement and adoption analytics
+  - **Enterprise Metrics** (Demo & Live Data):
+    - Overview - Key metrics and high-level insights
+    - Usage - Detailed usage patterns and trends
+    - Performance - Chat performance and productivity metrics
+    - Adoption - User engagement and adoption analytics
+    - Seats - Copilot seat assignments and management
+    - 28-Day Report - Comprehensive 28-day metrics visualization
+  - **Organization Metrics** (Demo & Live Data):
+    - Overview - Organization-wide insights
+    - Usage Metrics - Detailed usage patterns
+    - Performance - Acceptance rates and productivity
+    - Adoption - User engagement analytics
+🎭 **Demo Mode** - Explore all features with realistic sample data before connecting your GitHub organization
+🔒 **Secure Deployment** - Environment variables and tokens never committed or deployed
 
 ## Tech Stack
 
@@ -101,6 +122,60 @@ Preview production build:
 ```bash
 npm run preview
 ```
+
+## Deployment
+
+### Deploy to Azure with Azure Developer CLI (Recommended)
+
+The easiest way to deploy this application to Azure:
+
+1. **Prerequisites**:
+   - Install [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
+   - Azure subscription
+
+2. **Deploy**:
+   ```bash
+   # Login to Azure
+   azd auth login
+   
+   # Deploy everything (creates resources + deploys app)
+   azd up
+   ```
+
+3. **Configuration**:
+   - The deployed app uses sample data from `.env.example`
+   - Your local `.env` file with real credentials is **never** deployed (excluded via `.azdignore`)
+   - To use real data in production, configure environment variables in Azure Portal:
+     - Go to your App Service → Configuration → Application settings
+     - Add: `VITE_GITHUB_ORG`, `VITE_GITHUB_TOKEN`, etc.
+
+4. **Update Deployment**:
+   ```bash
+   # Redeploy after code changes
+   azd deploy
+   ```
+
+**What `azd up` creates**:
+- Resource Group
+- App Service Plan (Free/Basic tier)
+- App Service (Static Web App)
+- Automatically builds and deploys your app
+
+### Manual Deployment
+
+Alternatively, deploy the built files from `dist/` folder to any static hosting service:
+- Azure Static Web Apps
+- Netlify
+- Vercel
+- GitHub Pages
+- AWS S3 + CloudFront
+
+Build the app first:
+```bash
+npm run build
+```
+
+Then upload the `dist/` folder contents to your hosting provider.
 
 ## Project Structure
 
