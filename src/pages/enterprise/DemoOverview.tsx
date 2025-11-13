@@ -204,6 +204,9 @@ const DemoOverview = () => {
                   strokeWidth: 1
                 }
               },
+              legends: {
+                text: { fill: '#cbd5e1' }
+              },
               tooltip: {
                 container: {
                   background: '#1e293b',
@@ -269,6 +272,9 @@ const DemoOverview = () => {
                   stroke: '#334155',
                   strokeWidth: 1
                 }
+              },
+              legends: {
+                text: { fill: '#cbd5e1' }
               },
               tooltip: {
                 container: {

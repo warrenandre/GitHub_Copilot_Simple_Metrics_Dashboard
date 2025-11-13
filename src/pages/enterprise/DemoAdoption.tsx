@@ -150,6 +150,9 @@ const DemoAdoption = () => {
                 legend: { text: { fill: '#cbd5e1', fontSize: 12 } }
               },
               grid: { line: { stroke: '#334155', strokeWidth: 1 } },
+              legends: {
+                text: { fill: '#cbd5e1' }
+              },
               tooltip: {
                 container: {
                   background: '#1e293b',
@@ -204,6 +207,9 @@ const DemoAdoption = () => {
                 legend: { text: { fill: '#cbd5e1', fontSize: 12 } }
               },
               grid: { line: { stroke: '#334155', strokeWidth: 1 } },
+              legends: {
+                text: { fill: '#cbd5e1' }
+              },
               tooltip: {
                 container: {
                   background: '#1e293b',
