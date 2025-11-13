@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Lightbulb, TrendingUp, AlertCircle, CheckCircle, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
-import { demoEnterpriseMetrics } from '../../data/demoEnterpriseData'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
+import { Lightbulb, TrendingUp, AlertCircle, CheckCircle, Sparkles, ChevronDown, ChevronUp, Calendar } from 'lucide-react'
+import { demoEnterpriseMetrics } from '../../../data/demoEnterpriseData'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
 
 interface Insight {
   type: 'success' | 'warning' | 'info' | 'action'
@@ -16,6 +16,13 @@ interface Insight {
 const DemoInsights = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
   const [expandedInsights, setExpandedInsights] = useState<Set<number>>(new Set())
+
+  const metricsData = demoEnterpriseMetrics
+
+  const dateRange = metricsData.length > 0 ? {
+    from: metricsData[0].date,
+    to: metricsData[metricsData.length - 1].date
+  } : { from: '', to: '' }
 
   const filteredData = useMemo(() => {
     return filterDataByDateRange(demoEnterpriseMetrics, selectedRange)
@@ -232,24 +239,39 @@ const DemoInsights = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Lightbulb className="w-8 h-8 text-purple-400" />
-            Actionable Insights
-          </h1>
-          <p className="text-slate-400 mt-2">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <Lightbulb className="w-8 h-8 text-purple-400" />
+              Actionable Insights
+            </h1>
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              DEMO DATA
+            </span>
+          </div>
+          <p className="text-slate-400">
             AI-powered analysis and recommendations based on GitHub best practices
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg">
-          <Sparkles className="w-5 h-5 text-yellow-400" />
-          <span className="text-sm font-semibold text-yellow-400">DEMO DATA</span>
+        <div className="flex items-center gap-3">
+          <DateRangeFilter
+            selectedRange={selectedRange}
+            onRangeChange={setSelectedRange}
+          />
         </div>
       </div>
 
-      {/* Date Range Filter */}
-      <DateRangeFilter selectedRange={selectedRange} onRangeChange={setSelectedRange} />
+      {/* Date Range */}
+      {dateRange.from && dateRange.to && (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Calendar className="w-4 h-4" />
+          <span>Data from {dateRange.from} to {dateRange.to}</span>
+          <span className="text-slate-500">•</span>
+          <span>{filteredData.length} of {metricsData.length} days shown</span>
+        </div>
+      )}
 
       {/* Insights Grid */}
       <div className="space-y-4">

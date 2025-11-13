@@ -1,110 +1,18 @@
-import { useState, useEffect, useMemo } from 'react'
-import { RefreshCw, Calendar, Users, Code, TrendingUp, Sparkles, Cpu, FileCode } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Calendar, Users, Code, TrendingUp, Sparkles, Cpu, FileCode } from 'lucide-react'
 import { ResponsiveLine } from '@nivo/line'
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsivePie } from '@nivo/pie'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demo28DayReportData } from '../../../data/demo28DayReport'
 
-interface DayTotal {
-  day: string
-  enterprise_id: string
-  daily_active_users: number
-  weekly_active_users: number
-  monthly_active_users: number
-  monthly_active_chat_users: number
-  monthly_active_agent_users: number
-  user_initiated_interaction_count: number
-  code_generation_activity_count: number
-  code_acceptance_activity_count: number
-  totals_by_ide: Array<{
-    ide: string
-    user_initiated_interaction_count: number
-    code_generation_activity_count: number
-    code_acceptance_activity_count: number
-    loc_suggested_to_add_sum: number
-    loc_suggested_to_delete_sum: number
-    loc_added_sum: number
-    loc_deleted_sum: number
-  }>
-  totals_by_feature: Array<{
-    feature: string
-    user_initiated_interaction_count: number
-    code_generation_activity_count: number
-    code_acceptance_activity_count: number
-    loc_suggested_to_add_sum: number
-    loc_suggested_to_delete_sum: number
-    loc_added_sum: number
-    loc_deleted_sum: number
-  }>
-  totals_by_language_feature: Array<{
-    language: string
-    feature: string
-    code_generation_activity_count: number
-    code_acceptance_activity_count: number
-    loc_suggested_to_add_sum: number
-    loc_suggested_to_delete_sum: number
-    loc_added_sum: number
-    loc_deleted_sum: number
-  }>
-  totals_by_language_model: Array<{
-    language: string
-    model: string
-    code_generation_activity_count: number
-    code_acceptance_activity_count: number
-    loc_suggested_to_add_sum: number
-    loc_suggested_to_delete_sum: number
-    loc_added_sum: number
-    loc_deleted_sum: number
-  }>
-  totals_by_model_feature: Array<{
-    model: string
-    feature: string
-    user_initiated_interaction_count: number
-    code_generation_activity_count: number
-    code_acceptance_activity_count: number
-    loc_suggested_to_add_sum: number
-    loc_suggested_to_delete_sum: number
-    loc_added_sum: number
-    loc_deleted_sum: number
-  }>
-  loc_suggested_to_add_sum: number
-  loc_suggested_to_delete_sum: number
-  loc_added_sum: number
-  loc_deleted_sum: number
-}
-
-interface Report28DayData {
-  report_start_day: string
-  report_end_day: string
-  enterprise_id: string
-  created_at: string
-  day_totals: DayTotal[]
-}
-
-const Report28Day = () => {
-  const [reportData, setReportData] = useState<Report28DayData | null>(null)
-  const [dateRange, setDateRange] = useState({ from: '', to: '' })
+const DemoReport28Day = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
-
-  useEffect(() => {
-    loadReportData()
-  }, [])
-
-  const loadReportData = () => {
-    try {
-      const jsonStr = localStorage.getItem('enterprise_report_data')
-      if (jsonStr) {
-        const data: Report28DayData = JSON.parse(jsonStr)
-        setReportData(data)
-        setDateRange({
-          from: data.report_start_day,
-          to: data.report_end_day
-        })
-      }
-    } catch (error) {
-      console.error('Failed to load 28-day report data:', error)
-    }
+  const reportData = demo28DayReportData
+  const dateRange = {
+    from: reportData.report_start_day,
+    to: reportData.report_end_day
   }
 
   // Filter data by date range
@@ -314,29 +222,26 @@ const Report28Day = () => {
           <p className="text-slate-400">Comprehensive analysis of Copilot usage and productivity</p>
         </div>
         <div className="flex items-center gap-3">
-          <DateRangeFilter
-            selectedRange={selectedRange}
-            onRangeChange={setSelectedRange}
-          />
-          <button
-            onClick={loadReportData}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg">
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+            <span className="text-sm font-semibold text-yellow-400">DEMO DATA</span>
+          </div>
         </div>
       </div>
 
-      {/* Date Range */}
-      {dateRange.from && dateRange.to && (
+      {/* Date Range Filter and Info */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 text-sm text-slate-400">
           <Calendar className="w-4 h-4" />
           <span>Report Period: {dateRange.from} to {dateRange.to}</span>
           <span className="text-slate-500">•</span>
           <span>{filteredData.length} of {reportData.day_totals.length} days shown</span>
         </div>
-      )}
+        <DateRangeFilter
+          selectedRange={selectedRange}
+          onRangeChange={setSelectedRange}
+        />
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -683,4 +588,4 @@ const Report28Day = () => {
   )
 }
 
-export default Report28Day
+export default DemoReport28Day

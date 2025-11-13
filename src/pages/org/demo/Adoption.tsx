@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Users, UserPlus, Percent, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react'
-import MetricCard from '../../components/MetricCard'
-import LineChart from '../../components/LineChart'
-import PieChart from '../../components/PieChart'
-import BarChart from '../../components/BarChart'
-import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
-import { githubApiService } from '../../services/githubApi'
-import { transformGitHubData } from '../../services/dataTransform'
-import { CopilotMetricsResponse, LineChartData, ChartData } from '../../types/metrics'
+import { Users, UserPlus, Percent, TrendingUp } from 'lucide-react'
+import MetricCard from '../../../components/MetricCard'
+import LineChart from '../../../components/LineChart'
+import PieChart from '../../../components/PieChart'
+import BarChart from '../../../components/BarChart'
+import DateRangeSelector, { DateRange } from '../../../components/DateRangeSelector'
+import { metricsService } from '../../../services/api'
+import { CopilotMetricsResponse, LineChartData, ChartData } from '../../../types/metrics'
 
-const LiveAdoption = () => {
+const Adoption = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lastRefresh, setLastRefresh] = useState(new Date())
   const [dateRange, setDateRange] = useState<DateRange>('daily')
 
   const getDaysToShow = () => {
@@ -23,62 +21,33 @@ const LiveAdoption = () => {
     }
   }
 
-  const loadMetrics = async () => {
-    setLoading(true)
-    try {
-      const githubData = await githubApiService.loadData()
-      if (githubData && githubData.length > 0) {
-        const transformed = transformGitHubData(githubData)
-        setMetrics(transformed)
-        setLastRefresh(new Date(githubApiService.getLastSavedTimestamp() || new Date()))
-      } else {
-        setMetrics(null)
-      }
-    } catch (error) {
-      console.error('Failed to load metrics:', error)
-      setMetrics(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        const data = await metricsService.fetchMetrics('your-org')
+        setMetrics(data)
+      } catch (error) {
+        console.error('Failed to load metrics:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     loadMetrics()
-    const interval = setInterval(loadMetrics, 5 * 60 * 1000)
-    return () => clearInterval(interval)
   }, [])
 
-  if (loading && !metrics) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-white dark:text-white light:text-gray-900 text-xl flex items-center gap-3">
-          <RefreshCw className="w-6 h-6 animate-spin" />
-          Loading live metrics...
-        </div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Loading adoption metrics...</div>
       </div>
     )
   }
 
-  if (!metrics || !metrics.data || metrics.data.length === 0) {
+  if (!metrics) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 rounded-lg p-6 max-w-md">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-yellow-400 mt-1" />
-            <div>
-              <h3 className="text-lg font-semibold text-yellow-400 mb-2">No Data Available</h3>
-              <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700 mb-3">
-                Please download metrics data from the Admin page first.
-              </p>
-              <a
-                href="/admin"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors text-sm font-medium"
-              >
-                Go to Admin Settings
-              </a>
-            </div>
-          </div>
-        </div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl">Failed to load metrics</div>
       </div>
     )
   }
@@ -86,9 +55,10 @@ const LiveAdoption = () => {
   const daysToShow = getDaysToShow()
   const filteredData = metrics.data.slice(-daysToShow)
 
+  const avgMetrics = metricsService.calculateAverageMetrics(filteredData)
   const latestMetrics = filteredData[filteredData.length - 1]
-  const avgActiveUsers = Math.round(filteredData.reduce((sum, d) => sum + d.total_active_users, 0) / filteredData.length)
   
+  // Active users over time
   const userTrendData: LineChartData[] = [
     {
       id: 'Total Active Users',
@@ -106,56 +76,43 @@ const LiveAdoption = () => {
     }
   ]
 
+  // Editor distribution
   const editorData: ChartData[] = metrics.editors?.map(e => ({
     id: e.name,
     label: e.name,
     value: e.total_engaged_users
   })) || []
 
+  // Language adoption
   const languageData = metrics.languages?.slice(0, 8).map(l => ({
     language: l.name,
     users: l.total_engaged_users
   })) || []
 
+  // Calculate chat adoption rate
   const chatAdoptionRate = latestMetrics.total_active_users > 0
     ? (latestMetrics.total_active_chat_users / latestMetrics.total_active_users * 100).toFixed(1)
     : 0
 
+  // Calculate total engaged users
   const totalEditorUsers = metrics.editors?.reduce((sum, e) => sum + e.total_engaged_users, 0) || 0
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900">Live Adoption Metrics</h1>
-            <span className="px-3 py-1 bg-green-500 bg-opacity-20 text-green-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              LIVE
-            </span>
-          </div>
-          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">Real-time user engagement and adoption patterns</p>
+          <h1 className="text-3xl font-bold text-white dark:text-white light:text-gray-900 mb-2">Adoption Metrics</h1>
+          <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">User engagement and adoption patterns</p>
         </div>
-        <div className="flex items-center gap-4">
-          <DateRangeSelector
-            selectedRange={dateRange}
-            onRangeChange={setDateRange}
-          />
-          <button
-            onClick={loadMetrics}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 light:bg-gray-200 hover:bg-slate-600 dark:hover:bg-slate-600 light:hover:bg-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
+        <DateRangeSelector
+          selectedRange={dateRange}
+          onRangeChange={setDateRange}
+        />
       </div>
 
-      <div className="bg-slate-800 dark:bg-slate-800 light:bg-green-50 border border-slate-700 dark:border-slate-700 light:border-green-200 rounded-lg px-4 py-3">
+      <div className="bg-slate-800 dark:bg-slate-800 light:bg-blue-50 border border-slate-700 dark:border-slate-700 light:border-blue-200 rounded-lg px-4 py-3">
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
-          <span className="font-semibold text-white dark:text-white light:text-gray-900">Last updated:</span>{' '}
-          {lastRefresh.toLocaleString()} • Showing {getDaysToShow()} days of data
+          <span className="font-semibold text-white dark:text-white light:text-gray-900">Showing {getDaysToShow()} days of demo data</span>
         </p>
       </div>
 
@@ -164,7 +121,7 @@ const LiveAdoption = () => {
         <MetricCard
           title="Total Active Users"
           value={latestMetrics.total_active_users}
-          change={`${avgActiveUsers} avg daily`}
+          change={`${avgMetrics.avgActiveUsers} avg daily`}
           icon={<Users className="w-6 h-6" />}
           trend="up"
         />
@@ -264,4 +221,4 @@ const LiveAdoption = () => {
   )
 }
 
-export default LiveAdoption
+export default Adoption

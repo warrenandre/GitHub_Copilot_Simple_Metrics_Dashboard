@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Lightbulb, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
 
 interface DayTotal {
   day: string

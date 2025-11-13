@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Code, MessageSquare, TrendingUp, FileCode, RefreshCw, Calendar } from 'lucide-react'
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsivePie } from '@nivo/pie'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
 
 interface MetricsData {
   date: string

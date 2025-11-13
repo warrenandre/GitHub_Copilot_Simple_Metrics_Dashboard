@@ -1,14 +1,19 @@
 import { useMemo, useState } from 'react'
-import { TrendingUp, Users, Percent, Target, Sparkles } from 'lucide-react'
+import { TrendingUp, Users, Percent, Target, Sparkles, Calendar } from 'lucide-react'
 import { ResponsiveLine } from '@nivo/line'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
-import { demoEnterpriseMetrics } from '../../data/demoEnterpriseData'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demoEnterpriseMetrics } from '../../../data/demoEnterpriseData'
 
 const DemoAdoption = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
 
   const metricsData = demoEnterpriseMetrics
+
+  const dateRange = metricsData.length > 0 ? {
+    from: metricsData[0].date,
+    to: metricsData[metricsData.length - 1].date
+  } : { from: '', to: '' }
 
   const filteredData = useMemo(() => {
     return filterDataByDateRange(metricsData, selectedRange)
@@ -55,65 +60,87 @@ const DemoAdoption = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold text-white">Adoption Metrics</h1>
-          <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3" />
-            DEMO DATA
-          </span>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Adoption Metrics</h1>
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              DEMO DATA
+            </span>
+          </div>
+          <p className="text-slate-400">Track Copilot adoption across your enterprise (Demo Mode)</p>
         </div>
-        <p className="text-slate-400">Track Copilot adoption across your enterprise (Demo Mode)</p>
+        <div className="flex items-center gap-3">
+          <DateRangeFilter
+            selectedRange={selectedRange}
+            onRangeChange={setSelectedRange}
+          />
+        </div>
       </div>
 
-      <DateRangeFilter
-        selectedRange={selectedRange}
-        onRangeChange={setSelectedRange}
-      />
+      {/* Date Range */}
+      {dateRange.from && dateRange.to && (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Calendar className="w-4 h-4" />
+          <span>Data from {dateRange.from} to {dateRange.to}</span>
+          <span className="text-slate-500">•</span>
+          <span>{filteredData.length} of {metricsData.length} days shown</span>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Avg Engagement Rate</h3>
-            <Percent className="w-5 h-5 text-green-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Percent className="w-8 h-8 text-green-500" />
+            <span className="text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-1 rounded">
+              ENGAGEMENT
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{avgEngagementRate}%</p>
-          <p className="text-xs text-slate-400 mt-1">Engaged / Active</p>
+          <div className="text-3xl font-bold text-white mb-1">{avgEngagementRate}%</div>
+          <div className="text-sm text-slate-400">Avg Engagement Rate</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Peak Users</h3>
-            <TrendingUp className="w-5 h-5 text-orange-500" />
+          <div className="flex items-center justify-between mb-4">
+            <TrendingUp className="w-8 h-8 text-orange-500" />
+            <span className="text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-1 rounded">
+              PEAK
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{peakUsers.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">Maximum active</p>
+          <div className="text-3xl font-bold text-white mb-1">{peakUsers.toLocaleString()}</div>
+          <div className="text-sm text-slate-400">Peak Users</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Avg Active Users</h3>
-            <Users className="w-5 h-5 text-blue-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Users className="w-8 h-8 text-blue-500" />
+            <span className="text-xs font-semibold text-blue-500 bg-blue-500/10 px-2 py-1 rounded">
+              DAILY AVG
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{avgActiveUsers.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">Daily average</p>
+          <div className="text-3xl font-bold text-white mb-1">{avgActiveUsers.toLocaleString()}</div>
+          <div className="text-sm text-slate-400">Avg Active Users</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Tracking Days</h3>
-            <Target className="w-5 h-5 text-purple-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Target className="w-8 h-8 text-purple-500" />
+            <span className="text-xs font-semibold text-purple-500 bg-purple-500/10 px-2 py-1 rounded">
+              TRACKING
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{totalDays}</p>
-          <p className="text-xs text-slate-400 mt-1">Days of data</p>
+          <div className="text-3xl font-bold text-white mb-1">{totalDays}</div>
+          <div className="text-sm text-slate-400">Days of Data</div>
         </div>
       </div>
 
       {/* Adoption Trend */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h2 className="text-xl font-semibold text-white mb-6">Adoption Trend</h2>
-        <div className="h-80">
+        <h3 className="text-lg font-semibold text-white mb-4">Adoption Trend</h3>
+        <div style={{ height: '300px' }}>
           <ResponsiveLine
             data={adoptionTrendData}
             margin={{ top: 20, right: 40, bottom: 60, left: 60 }}
@@ -169,8 +196,8 @@ const DemoAdoption = () => {
 
       {/* Engagement Rate */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <h2 className="text-xl font-semibold text-white mb-6">Engagement Rate Over Time</h2>
-        <div className="h-80">
+        <h3 className="text-lg font-semibold text-white mb-4">Engagement Rate Over Time</h3>
+        <div style={{ height: '300px' }}>
           <ResponsiveLine
             data={engagementRateData}
             margin={{ top: 20, right: 40, bottom: 60, left: 60 }}

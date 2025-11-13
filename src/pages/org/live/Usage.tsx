@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Activity, MessageSquare, RefreshCw, AlertCircle, Zap } from 'lucide-react'
-import MetricCard from '../../components/MetricCard'
-import LineChart from '../../components/LineChart'
-import BarChart from '../../components/BarChart'
-import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
-import { githubApiService } from '../../services/githubApi'
-import { transformGitHubData, calculateAverageMetrics } from '../../services/dataTransform'
-import { CopilotMetricsResponse, LineChartData, GitHubCopilotMetricsResponse } from '../../types/metrics'
+import MetricCard from '../../../components/MetricCard'
+import LineChart from '../../../components/LineChart'
+import BarChart from '../../../components/BarChart'
+import DateRangeSelector, { DateRange } from '../../../components/DateRangeSelector'
+import { githubApiService } from '../../../services/githubApi'
+import { transformGitHubData, calculateAverageMetrics } from '../../../services/dataTransform'
+import { CopilotMetricsResponse, LineChartData, GitHubCopilotMetricsResponse } from '../../../types/metrics'
 
 const LiveUsage = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)

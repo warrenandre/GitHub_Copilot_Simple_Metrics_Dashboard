@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react'
-import { Users, Activity, MessageSquare, Code, TrendingUp, Sparkles } from 'lucide-react'
+import { Users, Activity, MessageSquare, Code, Sparkles, Calendar } from 'lucide-react'
 import { ResponsiveLine } from '@nivo/line'
-import DateRangeFilter, { DateRangeType } from '../../components/DateRangeFilter'
-import { filterDataByDateRange } from '../../utils/dateFilters'
-import { demoEnterpriseMetrics } from '../../data/demoEnterpriseData'
+import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demoEnterpriseMetrics } from '../../../data/demoEnterpriseData'
 
 const DemoOverview = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
 
   // Use demo data directly
   const metricsData = demoEnterpriseMetrics
+  
+  // Calculate date range from data
+  const dateRange = metricsData.length > 0 ? {
+    from: metricsData[0].date,
+    to: metricsData[metricsData.length - 1].date
+  } : { from: '', to: '' }
 
   // Filter data based on selected date range
   const filteredData = useMemo(() => {
@@ -70,68 +76,87 @@ const DemoOverview = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold text-white">Enterprise Overview</h1>
-          <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3" />
-            DEMO DATA
-          </span>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Enterprise Overview</h1>
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              DEMO DATA
+            </span>
+          </div>
+          <p className="text-slate-400">Enterprise-wide GitHub Copilot metrics and insights</p>
         </div>
-        <p className="text-slate-400">Enterprise-wide GitHub Copilot metrics and insights (Demo Mode)</p>
+        <div className="flex items-center gap-3">
+          <DateRangeFilter
+            selectedRange={selectedRange}
+            onRangeChange={setSelectedRange}
+          />
+        </div>
       </div>
 
-      <DateRangeFilter
-        selectedRange={selectedRange}
-        onRangeChange={setSelectedRange}
-      />
+      {/* Date Range */}
+      {dateRange.from && dateRange.to && (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Calendar className="w-4 h-4" />
+          <span>Data from {dateRange.from} to {dateRange.to}</span>
+          <span className="text-slate-500">•</span>
+          <span>{filteredData.length} of {metricsData.length} days shown</span>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Avg Active Users</h3>
-            <Users className="w-5 h-5 text-orange-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Users className="w-8 h-8 text-orange-500" />
+            <span className="text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-1 rounded">
+              USERS
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{avgActiveUsers.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">Daily average</p>
+          <div className="text-3xl font-bold text-white mb-1">{avgActiveUsers}</div>
+          <div className="text-sm text-slate-400">Avg Active Users/Day</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Total Chat Sessions</h3>
-            <MessageSquare className="w-5 h-5 text-green-500" />
+          <div className="flex items-center justify-between mb-4">
+            <MessageSquare className="w-8 h-8 text-green-500" />
+            <span className="text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-1 rounded">
+              CHAT
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{totalChats.toLocaleString()}</p>
-          <p className="text-xs text-slate-400 mt-1">Across all days</p>
+          <div className="text-3xl font-bold text-white mb-1">{totalChats.toLocaleString()}</div>
+          <div className="text-sm text-slate-400">Total Chat Sessions</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Code Completion Days</h3>
-            <Code className="w-5 h-5 text-blue-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Code className="w-8 h-8 text-blue-500" />
+            <span className="text-xs font-semibold text-blue-500 bg-blue-500/10 px-2 py-1 rounded">
+              CODE
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{codeCompletionDays}</p>
-          <p className="text-xs text-slate-400 mt-1">Days with activity</p>
+          <div className="text-3xl font-bold text-white mb-1">{codeCompletionDays}</div>
+          <div className="text-sm text-slate-400">Days with Completions</div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-400">Chat Active Days</h3>
-            <Activity className="w-5 h-5 text-purple-500" />
+          <div className="flex items-center justify-between mb-4">
+            <Activity className="w-8 h-8 text-purple-500" />
+            <span className="text-xs font-semibold text-purple-500 bg-purple-500/10 px-2 py-1 rounded">
+              ACTIVITY
+            </span>
           </div>
-          <p className="text-3xl font-bold text-white">{chatDays}</p>
-          <p className="text-xs text-slate-400 mt-1">Days with chat</p>
+          <div className="text-3xl font-bold text-white mb-1">{chatDays}</div>
+          <div className="text-sm text-slate-400">Days with Chat Activity</div>
         </div>
       </div>
 
-      {/* Activity Trends Chart */}
+      {/* User Activity Trend */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-        <div className="flex items-center gap-3 mb-6">
-          <TrendingUp className="w-6 h-6 text-orange-500" />
-          <h2 className="text-xl font-semibold text-white">User Activity Trends</h2>
-        </div>
-        <div className="h-80">
+        <h3 className="text-lg font-semibold text-white mb-4">User Activity Trend</h3>
+        <div style={{ height: '300px' }}>
           <ResponsiveLine
             data={activityChartData}
             margin={{ top: 20, right: 120, bottom: 60, left: 60 }}

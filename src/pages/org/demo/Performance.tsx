@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Zap, Target, LineChart as LineChartIcon, BarChart3 } from 'lucide-react'
-import MetricCard from '../../components/MetricCard'
-import LineChart from '../../components/LineChart'
-import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
-import { metricsService } from '../../services/api'
-import { CopilotMetricsResponse, LineChartData } from '../../types/metrics'
+import MetricCard from '../../../components/MetricCard'
+import LineChart from '../../../components/LineChart'
+import DateRangeSelector, { DateRange } from '../../../components/DateRangeSelector'
+import { metricsService } from '../../../services/api'
+import { CopilotMetricsResponse, LineChartData } from '../../../types/metrics'
 
 const Performance = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
