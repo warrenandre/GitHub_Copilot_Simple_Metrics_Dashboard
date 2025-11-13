@@ -5,6 +5,9 @@ import { loadApiConfig, saveApiConfig, validateApiConfig } from '../config/apiCo
 import { APIConfig, DownloadResult } from '../types/metrics'
 
 const Admin = () => {
+  // Check if demo mode is enabled
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+  
   const [config, setConfig] = useState<APIConfig>({
     org: '',
     token: '',
@@ -260,8 +263,18 @@ const Admin = () => {
             <Settings className="w-3 h-3" />
             ADMIN
           </span>
+          {isDemoMode && (
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Info className="w-3 h-3" />
+              DEMO MODE
+            </span>
+          )}
         </div>
-        <p className="text-slate-400">Configure and download GitHub Copilot metrics data</p>
+        <p className="text-slate-400">
+          {isDemoMode 
+            ? 'Viewing in demo mode - all controls are disabled'
+            : 'Configure and download GitHub Copilot metrics data'}
+        </p>
       </div>
 
       {/* Current Data Status */}
@@ -336,7 +349,8 @@ const Admin = () => {
               value={config.org}
               onChange={(e) => handleInputChange('org', e.target.value)}
               placeholder="your-enterprise"
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              disabled={isDemoMode}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-slate-400 mt-1">The GitHub enterprise/organization name (not case sensitive)</p>
           </div>
@@ -351,7 +365,8 @@ const Admin = () => {
               value={config.token}
               onChange={(e) => handleInputChange('token', e.target.value)}
               placeholder="ghp_xxxxxxxxxxxx"
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              disabled={isDemoMode}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-slate-400 mt-1">
               Token needs <code className="bg-slate-900 px-1 rounded">manage_billing:copilot</code>,{' '}
@@ -370,7 +385,8 @@ const Admin = () => {
               value={config.team_slug}
               onChange={(e) => handleInputChange('team_slug', e.target.value)}
               placeholder="engineering-team"
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              disabled={isDemoMode}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-slate-400 mt-1">Leave empty to fetch enterprise-wide metrics</p>
           </div>
@@ -386,7 +402,8 @@ const Admin = () => {
                 value={config.since}
                 onChange={(e) => handleInputChange('since', e.target.value)}
                 placeholder={getSinceDefault()}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                disabled={isDemoMode}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-slate-400 mt-1">Default: 28 days ago</p>
             </div>
@@ -400,7 +417,8 @@ const Admin = () => {
                 value={config.until}
                 onChange={(e) => handleInputChange('until', e.target.value)}
                 placeholder={getUntilDefault()}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                disabled={isDemoMode}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-slate-400 mt-1">Default: Yesterday</p>
             </div>
@@ -415,7 +433,7 @@ const Admin = () => {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownloadEnterpriseMetrics}
-            disabled={loading || !config.org || !config.token}
+            disabled={isDemoMode || loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
@@ -424,7 +442,7 @@ const Admin = () => {
 
           <button
             onClick={handleDownloadEnterpriseSeats}
-            disabled={loading || !config.org || !config.token}
+            disabled={isDemoMode || loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
@@ -445,20 +463,21 @@ const Admin = () => {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownload28DayReport}
-            disabled={loading || !config.org || !config.token}
+            disabled={isDemoMode || loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
             {loading ? 'Downloading...' : 'Get Download Link'}
           </button>
           
-          <label className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors cursor-pointer">
+          <label className={`flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors ${isDemoMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
             <Save className="w-5 h-5" />
             Upload Report File
             <input
               type="file"
               accept=".json"
               onChange={handleUpload28DayReport}
+              disabled={isDemoMode}
               className="hidden"
             />
           </label>
@@ -478,7 +497,7 @@ const Admin = () => {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownloadOrgMetrics}
-            disabled={loading || !config.org || !config.token}
+            disabled={isDemoMode || loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
@@ -487,7 +506,7 @@ const Admin = () => {
 
           <button
             onClick={handleDownloadOrgSeats}
-            disabled={loading || !config.org || !config.token}
+            disabled={isDemoMode || loading || !config.org || !config.token}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
@@ -508,7 +527,7 @@ const Admin = () => {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleClearData}
-            disabled={loading}
+            disabled={isDemoMode || loading}
             className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
           >
             <Trash2 className="w-5 h-5" />

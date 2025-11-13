@@ -3,7 +3,12 @@
 # Deployment directory
 .azd-deploy/
 
-# Environment files
+# Environment files with sensitive data
+.env
+.env.local
+.env.*.local
+
+# Azure environment configs
 .azure/**/
 !.azure/config.json
 

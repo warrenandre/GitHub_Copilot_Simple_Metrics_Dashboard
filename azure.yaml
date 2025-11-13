@@ -4,9 +4,18 @@ name: ghcp-dashboard
 metadata:
   template: ghcp-dashboard@0.0.1-beta
 
+hooks:
+  prepackage:
+    windows:
+      shell: pwsh
+      run: ./scripts/prepackage.ps1
+    posix:
+      shell: sh
+      run: ./scripts/prepackage.sh
+
 services:
   web:
-    project: ./. azd-deploy
+    project: ./.azd-deploy
     language: js
     host: appservice
 

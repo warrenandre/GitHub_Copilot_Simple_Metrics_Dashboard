@@ -34,6 +34,9 @@ New-Item -ItemType Directory -Path $deployDir | Out-Null
 # Copy dist folder
 Copy-Item -Path "dist" -Destination "$deployDir/dist" -Recurse
 
+# Copy .env.example as .env for deployment (sample values)
+Copy-Item -Path ".env.example" -Destination "$deployDir/.env"
+
 # Create package.json for deployment
 $packageJson = @{
     name = "ghcp-dashboard"

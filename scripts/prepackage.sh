@@ -24,6 +24,9 @@ mkdir -p "$DEPLOY_DIR"
 # Copy dist folder
 cp -r dist "$DEPLOY_DIR/"
 
+# Copy .env.example as .env for deployment (sample values)
+cp .env.example "$DEPLOY_DIR/.env"
+
 # Create package.json for deployment
 cat > "$DEPLOY_DIR/package.json" <<'EOF'
 {
