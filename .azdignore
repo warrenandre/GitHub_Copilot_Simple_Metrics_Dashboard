@@ -1,0 +1,11 @@
+# Azure Developer CLI - Deployment Files
+
+# Deployment directory
+.azd-deploy/
+
+# Environment files
+.azure/**/
+!.azure/config.json
+
+# Deployment artifacts
+*.zip

@@ -1,0 +1,7 @@
+# Deployment artifacts
+*.zip
+temp_deploy/
+deploy.parameters.temp.json
+
+# Logs
+*.log

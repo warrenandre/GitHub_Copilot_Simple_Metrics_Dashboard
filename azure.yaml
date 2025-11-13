@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: ghcp-dashboard
+metadata:
+  template: ghcp-dashboard@0.0.1-beta
+
+services:
+  web:
+    project: ./. azd-deploy
+    language: js
+    host: appservice
+
