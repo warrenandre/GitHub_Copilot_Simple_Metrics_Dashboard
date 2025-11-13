@@ -19,6 +19,7 @@ import EnterpriseOverview from './pages/enterprise/Overview'
 import EnterpriseUsage from './pages/enterprise/Usage'
 import EnterprisePerformance from './pages/enterprise/Performance'
 import EnterpriseAdoption from './pages/enterprise/Adoption'
+import EnterpriseReport28Day from './pages/enterprise/Report28Day'
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
           <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
           <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
           <Route path="/enterprise/adoption" element={<EnterpriseAdoption />} />
+          <Route path="/enterprise/report" element={<EnterpriseReport28Day />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />

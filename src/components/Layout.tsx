@@ -17,6 +17,7 @@ import {
   Home,
   Building,
   Home as HomeIcon,
+  FileBarChart,
 } from 'lucide-react'
 import { initAppMetadata, checkSystemState } from '../utils/integrity'
 
@@ -229,6 +230,18 @@ const Layout = ({ children }: LayoutProps) => {
                         >
                           <Users className="w-5 h-5" />
                           <span className="font-medium text-sm">Seats</span>
+                        </Link>
+                        <Link
+                          to="/enterprise/report"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/report'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <FileBarChart className="w-5 h-5" />
+                          <span className="font-medium text-sm">28-Day Report</span>
                         </Link>
                       </div>
                     )}

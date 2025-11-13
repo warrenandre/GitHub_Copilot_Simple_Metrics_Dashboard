@@ -320,6 +320,98 @@ class GitHubCopilotAPIService {
   }
 
   /**
+   * Fetch 28-day enterprise report and download the file
+   */
+  async download28DayReport(config: APIConfig): Promise<DownloadResult> {
+    const { org, token } = config
+
+    console.log('🔍 GitHub Copilot 28-Day Report API Debug Info:')
+    console.log('  Enterprise:', org)
+    console.log('  Token Present:', !!token)
+
+    try {
+      // Step 1: Fetch the report metadata with download links
+      const reportEndpoint = `${this.baseUrl}/enterprises/${org}/copilot/metrics/reports/enterprise-28-day/latest`
+      
+      console.log('📤 Report Metadata Request URL:', reportEndpoint)
+
+      const reportResponse = await fetch(reportEndpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${token}`,
+          'X-GitHub-Api-Version': this.apiVersion,
+        },
+      })
+
+      console.log('📥 Report Metadata Response Status:', reportResponse.status, reportResponse.statusText)
+
+      if (!reportResponse.ok) {
+        const errorText = await reportResponse.text()
+        console.error('❌ Report API Error Response:', errorText)
+        
+        let errorMessage = `GitHub Report API error (${reportResponse.status})`
+        
+        if (reportResponse.status === 401) {
+          errorMessage += ': Invalid or expired token. Please check your Personal Access Token.'
+        } else if (reportResponse.status === 404) {
+          errorMessage += ': Enterprise not found or 28-day report not available. Verify enterprise name.'
+        } else if (reportResponse.status === 403) {
+          errorMessage += ': Access denied. Ensure you are an enterprise owner and token has required scopes.'
+        } else {
+          errorMessage += `: ${errorText}`
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      const reportMetadata = await reportResponse.json()
+      console.log('✅ Report metadata received:', reportMetadata)
+
+      // Step 2: Extract download link from response
+      let downloadUrl: string | null = null
+      
+      if (reportMetadata.download_links && Array.isArray(reportMetadata.download_links) && reportMetadata.download_links.length > 0) {
+        downloadUrl = reportMetadata.download_links[0]
+        console.log('📥 Found download link in download_links array:', downloadUrl)
+      } else if (reportMetadata.download_url) {
+        downloadUrl = reportMetadata.download_url
+        console.log('📥 Found download_url:', downloadUrl)
+      }
+      
+      if (!downloadUrl) {
+        console.error('❌ No download link found in response:', reportMetadata)
+        throw new Error('No download link found in report response. Response structure may have changed.')
+      }
+
+      // Step 3: Open download link in new tab (CORS workaround)
+      console.log('📥 Opening download link in new tab:', downloadUrl)
+      
+      // Open in new tab - user will need to save the file and upload it
+      window.open(downloadUrl, '_blank')
+      
+      console.log('✅ Download link opened in new tab')
+      console.log('💡 User should save the JSON file and upload it via the Admin page')
+
+      return {
+        success: true,
+        message: `28-day report download link opened in new tab. Please save the JSON file and use the "Upload Report File" button to import it.`,
+        dateRange: {
+          from: reportMetadata.report_start_day || 'unknown',
+          to: reportMetadata.report_end_day || 'unknown',
+        }
+      }
+    } catch (error) {
+      console.error('❌ 28-day report download error:', error)
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred while downloading report',
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  /**
    * Fetch seats data from GitHub Copilot API
    */
   async fetchSeatsFromGitHub(config: APIConfig, level: 'enterprise' | 'organization'): Promise<any> {
@@ -727,6 +819,10 @@ class GitHubCopilotAPIService {
     localStorage.removeItem('copilot_enterprise_seats_data_timestamp')
     localStorage.removeItem('copilot_org_seats_data')
     localStorage.removeItem('copilot_org_seats_data_timestamp')
+    
+    // Clear 28-day report data
+    localStorage.removeItem('enterprise_report_data')
+    localStorage.removeItem('enterprise_report_data_timestamp')
   }
 
   /**

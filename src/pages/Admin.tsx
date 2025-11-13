@@ -16,6 +16,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(false)
   const [enterpriseMetricsResult, setEnterpriseMetricsResult] = useState<DownloadResult | null>(null)
   const [enterpriseSeatsResult, setEnterpriseSeatsResult] = useState<DownloadResult | null>(null)
+  const [enterprise28DayReportResult, setEnterprise28DayReportResult] = useState<DownloadResult | null>(null)
   const [orgMetricsResult, setOrgMetricsResult] = useState<DownloadResult | null>(null)
   const [orgSeatsResult, setOrgSeatsResult] = useState<DownloadResult | null>(null)
   const [dataStats, setDataStats] = useState<ReturnType<typeof githubApiService.getDataStats>>(null)
@@ -96,6 +97,81 @@ const Admin = () => {
     }
   }
 
+  const handleDownload28DayReport = async () => {
+    // Validate configuration
+    const validation = validateApiConfig(config)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      setEnterprise28DayReportResult({
+        success: false,
+        message: 'Please fix validation errors before proceeding',
+      })
+      return
+    }
+
+    setLoading(true)
+    setEnterprise28DayReportResult(null)
+    setValidationErrors([])
+
+    const downloadResult = await githubApiService.download28DayReport(config)
+    setEnterprise28DayReportResult(downloadResult)
+    setLoading(false)
+
+    if (downloadResult.success) {
+      saveApiConfig(config)
+      updateDataStats()
+    }
+  }
+
+  const handleUpload28DayReport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const jsonData = JSON.parse(content)
+        
+        // Check if it's wrapped in metadata or raw data
+        const reportData = jsonData.data || jsonData
+        
+        // Validate it has the expected structure
+        if (!reportData.day_totals || !Array.isArray(reportData.day_totals)) {
+          setEnterprise28DayReportResult({
+            success: false,
+            message: 'Invalid file format. Expected a 28-day report with day_totals array.',
+          })
+          return
+        }
+
+        // Save to localStorage
+        const storageKey = 'enterprise_report_data'
+        localStorage.setItem(storageKey, JSON.stringify(reportData))
+        localStorage.setItem(`${storageKey}_timestamp`, new Date().toISOString())
+
+        setEnterprise28DayReportResult({
+          success: true,
+          message: `28-day report uploaded successfully (${reportData.day_totals.length} days of data)`,
+          recordCount: reportData.day_totals.length,
+          dateRange: {
+            from: reportData.report_start_day || 'unknown',
+            to: reportData.report_end_day || 'unknown',
+          }
+        })
+        
+        updateDataStats()
+      } catch (error) {
+        setEnterprise28DayReportResult({
+          success: false,
+          message: error instanceof Error ? error.message : 'Failed to parse uploaded file',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    reader.readAsText(file)
+  }
+
   const handleDownloadOrgMetrics = async () => {
     // Validate configuration
     const validation = validateApiConfig(config)
@@ -157,6 +233,7 @@ const Admin = () => {
         message: 'Local data cleared successfully',
       })
       setEnterpriseSeatsResult(null)
+      setEnterprise28DayReportResult(null)
       setOrgMetricsResult(null)
       setOrgSeatsResult(null)
     }
@@ -361,6 +438,39 @@ const Admin = () => {
         </div>
       </div>
 
+      {/* Enterprise 28-Day Report */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h2 className="text-xl font-semibold text-white mb-4">Enterprise 28-Day Report</h2>
+        
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleDownload28DayReport}
+            disabled={loading || !config.org || !config.token}
+            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+          >
+            <Save className="w-5 h-5" />
+            {loading ? 'Downloading...' : 'Get Download Link'}
+          </button>
+          
+          <label className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors cursor-pointer">
+            <Save className="w-5 h-5" />
+            Upload Report File
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleUpload28DayReport}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 text-sm text-slate-400">
+          <p><strong>Get Download Link:</strong> Fetches the download URL for the 28-day report. Due to CORS restrictions, the file will open in a new tab.</p>
+          <p className="mt-1"><strong>Upload Report File:</strong> After downloading the JSON file from the link, upload it here to visualize the data.</p>
+          <p className="mt-1 text-xs">Data is stored in <code className="bg-slate-900 px-1 rounded">enterprise_report_data</code> for visualization</p>
+        </div>
+      </div>
+
       {/* Organization Metrics */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
         <h2 className="text-xl font-semibold text-white mb-4">Organization Copilot Data</h2>
@@ -481,6 +591,44 @@ const Admin = () => {
               )}
               {enterpriseSeatsResult.error && (
                 <p className="text-xs text-slate-400 mt-2 font-mono">{enterpriseSeatsResult.error}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enterprise 28-Day Report Result Message */}
+      {enterprise28DayReportResult && (
+        <div className={`rounded-lg p-4 border ${
+          enterprise28DayReportResult.success
+            ? 'bg-purple-500 bg-opacity-10 border-purple-500'
+            : 'bg-red-500 bg-opacity-10 border-red-500'
+        }`}>
+          <div className="flex items-start gap-3">
+            {enterprise28DayReportResult.success ? (
+              <CheckCircle className="w-5 h-5 text-purple-400 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <h3 className={`text-sm font-semibold mb-1 ${
+                enterprise28DayReportResult.success ? 'text-purple-400' : 'text-red-400'
+              }`}>
+                {enterprise28DayReportResult.success ? '28-Day Report Success' : '28-Day Report Error'}
+              </h3>
+              <p className="text-sm text-slate-300">{enterprise28DayReportResult.message}</p>
+              {enterprise28DayReportResult.recordCount && (
+                <p className="text-sm text-slate-300 mt-1">
+                  Records downloaded: <strong>{enterprise28DayReportResult.recordCount}</strong>
+                </p>
+              )}
+              {enterprise28DayReportResult.dateRange && (
+                <p className="text-sm text-slate-300">
+                  Date range: <strong>{enterprise28DayReportResult.dateRange.from}</strong> to <strong>{enterprise28DayReportResult.dateRange.to}</strong>
+                </p>
+              )}
+              {enterprise28DayReportResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{enterprise28DayReportResult.error}</p>
               )}
             </div>
           </div>
