@@ -6,11 +6,15 @@ import Overview from './pages/demo/Overview'
 import Usage from './pages/demo/Usage'
 import Performance from './pages/demo/Performance'
 import Adoption from './pages/demo/Adoption'
+import Seats from './pages/demo/Seats'
 import LiveOverview from './pages/live/Overview'
 import LiveUsage from './pages/live/Usage'
 import LivePerformance from './pages/live/Performance'
 import LiveAdoption from './pages/live/Adoption'
+import LiveSeats from './pages/live/Seats'
 import Admin from './pages/Admin'
+import EnterpriseSeats from './pages/enterprise/Seats'
+import EnterpriseDemoSeats from './pages/enterprise/DemoSeats'
 
 function App() {
   return (
@@ -25,12 +29,18 @@ function App() {
           <Route path="/demo/usage" element={<Usage />} />
           <Route path="/demo/performance" element={<Performance />} />
           <Route path="/demo/adoption" element={<Adoption />} />
+          <Route path="/demo/seats" element={<Seats />} />
           
           {/* Live Routes */}
           <Route path="/live" element={<LiveOverview />} />
           <Route path="/live/usage" element={<LiveUsage />} />
           <Route path="/live/performance" element={<LivePerformance />} />
           <Route path="/live/adoption" element={<LiveAdoption />} />
+          <Route path="/live/seats" element={<LiveSeats />} />
+          
+          {/* Enterprise Routes */}
+          <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
+          <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />

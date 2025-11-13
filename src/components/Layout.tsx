@@ -59,6 +59,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/demo/usage', label: 'Usage Metrics', icon: Activity },
     { path: '/demo/performance', label: 'Performance', icon: TrendingUp },
     { path: '/demo/adoption', label: 'Adoption', icon: Users },
+    { path: '/demo/seats', label: 'Seats', icon: Users },
   ]
 
   return (
@@ -115,6 +116,30 @@ const Layout = ({ children }: LayoutProps) => {
               </button>
               {enterpriseExpanded && (
                 <div className="mt-1 space-y-1 ml-2">
+                  <Link
+                    to="/enterprise/demo/seats"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/demo/seats'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium text-sm">Seats (Demo)</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/seats"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/seats'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium text-sm">Seats (Live)</span>
+                  </Link>
                   <Link
                     to="/enterprise/usage-analytics"
                     onClick={() => setSidebarOpen(false)}

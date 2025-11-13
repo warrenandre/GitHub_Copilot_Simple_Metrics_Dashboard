@@ -18,3 +18,4 @@ React application for visualizing GitHub Copilot metrics using Nivo charts.
 - Support both dark and light themes using Tailwind's dark mode classes
 - Use the ThemeContext for theme state management
 - Always build project after making changes to ensure everything works correctly
+- Always remove unused variables & functions

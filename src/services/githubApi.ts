@@ -12,21 +12,28 @@ class GitHubCopilotAPIService {
   /**
    * Fetch metrics from GitHub Copilot Metrics API
    */
-  async fetchFromGitHub(config: APIConfig): Promise<GitHubCopilotMetricsResponse> {
+  async fetchFromGitHub(config: APIConfig, level: 'enterprise' | 'organization' = 'enterprise'): Promise<GitHubCopilotMetricsResponse> {
     const { org, token, since, until: untilDate, team_slug } = config
 
     // DEBUG: Log configuration (without exposing full token)
-    console.log('🔍 GitHub Copilot API Debug Info:')
-    console.log('  Organization:', org)
+    console.log(`🔍 GitHub Copilot ${level === 'enterprise' ? 'Enterprise' : 'Organization'} Metrics API Debug Info:`)
+    console.log('  Organization/Enterprise:', org)
     console.log('  Token Present:', !!token)
     console.log('  Token Prefix:', token ? token.substring(0, 4) + '...' : 'none')
     console.log('  Date Range:', { since, until: untilDate })
     console.log('  Team Slug:', team_slug || '(org-wide)')
 
-    // Construct endpoint URL
-    const endpoint = team_slug
-      ? `${this.baseUrl}/enterprises/${org}/team/${team_slug}/copilot/metrics`
-      : `${this.baseUrl}/enterprises/${org}/copilot/metrics`
+    // Construct endpoint URL based on level
+    let endpoint: string
+    if (level === 'enterprise') {
+      endpoint = team_slug
+        ? `${this.baseUrl}/enterprises/${org}/team/${team_slug}/copilot/metrics`
+        : `${this.baseUrl}/enterprises/${org}/copilot/metrics`
+    } else {
+      endpoint = team_slug
+        ? `${this.baseUrl}/orgs/${org}/teams/${team_slug}/copilot/metrics`
+        : `${this.baseUrl}/orgs/${org}/copilot/metrics`
+    }
 
     // Build query parameters
     const params = new URLSearchParams()
@@ -65,11 +72,11 @@ class GitHubCopilotAPIService {
         console.error('   • Verify token has required scopes: manage_billing:copilot, read:org, or read:enterprise')
         console.error('   • Token format should be: ghp_xxx or github_pat_xxx')
       } else if (response.status === 404) {
-        console.error('   • Verify organization name is correct (case-sensitive)')
-        console.error('   • Check if Copilot is enabled for the organization')
+        console.error(`   • Verify ${level} name is correct (case-sensitive)`)
+        console.error(`   • Check if Copilot is enabled for the ${level}`)
         console.error('   • If using team_slug, verify the team exists')
       } else if (response.status === 403) {
-        console.error('   • Ensure you are an organization owner or admin')
+        console.error(`   • Ensure you are a ${level} owner or admin`)
         console.error('   • Check if API rate limit has been exceeded')
       } else if (response.status === 422) {
         console.error('   • Check date format (must be YYYY-MM-DD)')
@@ -311,44 +318,187 @@ class GitHubCopilotAPIService {
   }
 
   /**
+   * Fetch seats data from GitHub Copilot API
+   */
+  async fetchSeatsFromGitHub(config: APIConfig, level: 'enterprise' | 'organization'): Promise<any> {
+    const { org, token } = config
+
+    console.log(`🔍 GitHub Copilot ${level === 'enterprise' ? 'Enterprise' : 'Organization'} Seats API Debug Info:`)
+    console.log('  Organization/Enterprise:', org)
+    console.log('  Token Present:', !!token)
+
+    // Construct endpoint URL based on level
+    const endpoint = level === 'enterprise'
+      ? `${this.baseUrl}/enterprises/${org}/copilot/billing/seats`
+      : `${this.baseUrl}/orgs/${org}/copilot/billing/seats`
+
+    console.log('📤 Seats Request URL:', endpoint)
+
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${token}`,
+        'X-GitHub-Api-Version': this.apiVersion,
+      },
+    })
+
+    console.log('📥 Seats Response Status:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Seats API Error Response:', errorText)
+      console.error('💡 Troubleshooting:')
+      
+      if (response.status === 401) {
+        console.error('   • Check if token is valid and not expired')
+        console.error('   • Verify token has required scopes: manage_billing:copilot or read:org')
+      } else if (response.status === 404) {
+        console.error(`   • Verify ${level} name is correct (case-sensitive)`)
+        console.error(`   • Check if Copilot is enabled for the ${level}`)
+      } else if (response.status === 403) {
+        console.error(`   • Ensure you are a ${level} owner or admin`)
+        console.error('   • Check if API rate limit has been exceeded')
+      }
+      
+      throw new Error(`GitHub Seats API error (${response.status}): ${errorText}`)
+    }
+
+    const data = await response.json()
+    
+    console.log('✅ Seats data received successfully!')
+    console.log('  Total Seats:', data.total_seats)
+    console.log('  Seats Array Length:', data.seats?.length || 0)
+
+    return data
+  }
+
+  /**
    * Download metrics from GitHub and save to local storage and file
    */
-  async downloadAndSave(config: APIConfig): Promise<DownloadResult> {
+  async downloadAndSave(config: APIConfig, dataType: 'metrics' | 'seats' = 'metrics', level: 'enterprise' | 'organization' = 'enterprise'): Promise<DownloadResult> {
     try {
-      const data = await this.fetchFromGitHub(config)
-
-      if (!data || data.length === 0) {
-        return {
-          success: false,
-          message: 'No data returned from GitHub API',
+      let data: any
+      let filename: string
+      
+      if (dataType === 'seats') {
+        // Fetch seats data
+        data = await this.fetchSeatsFromGitHub(config, level)
+        
+        if (!data || !data.seats || data.seats.length === 0) {
+          return {
+            success: false,
+            message: 'No seats data returned from GitHub API',
+          }
         }
-      }
 
-      // Save to local storage
-      this.saveToLocalStorage(data)
+        // Create filename for seats
+        const timestamp = new Date().toISOString().split('T')[0]
+        filename = `copilot-seats-${level}-${config.org}-${timestamp}.json`
 
-      // Save to local file in public/data folder
-      await this.saveToLocalFile(data, config.org)
+        // Save seats to file
+        const jsonStr = JSON.stringify({
+          metadata: {
+            type: 'seats',
+            level: level,
+            organization: config.org,
+            downloadedAt: new Date().toISOString(),
+            totalSeats: data.total_seats,
+            seatsCount: data.seats.length,
+          },
+          data: data
+        }, null, 2)
 
-      // Save config (without token)
-      this.saveConfig({
-        org: config.org,
-        token: '', // Don't save token
-        since: config.since,
-        until: config.until,
-        team_slug: config.team_slug,
-      })
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
 
-      const dateRange = {
-        from: data[0]?.date || 'unknown',
-        to: data[data.length - 1]?.date || 'unknown',
-      }
+        // Also save to localStorage for live page
+        const storageKey = level === 'enterprise' ? 'copilot_enterprise_seats_data' : 'copilot_org_seats_data'
+        localStorage.setItem(storageKey, jsonStr)
+        localStorage.setItem(`${storageKey}_timestamp`, new Date().toISOString())
 
-      return {
-        success: true,
-        message: 'Data downloaded and saved to localStorage and local file',
-        recordCount: data.length,
-        dateRange,
+        return {
+          success: true,
+          message: `${level.charAt(0).toUpperCase() + level.slice(1)} seats data downloaded and saved to file`,
+          recordCount: data.seats.length,
+          dateRange: {
+            from: 'N/A (seats snapshot)',
+            to: 'N/A (seats snapshot)',
+          }
+        }
+      } else {
+        // Fetch metrics data
+        data = await this.fetchFromGitHub(config, level)
+
+        if (!data || data.length === 0) {
+          return {
+            success: false,
+            message: 'No data returned from GitHub API',
+          }
+        }
+
+        // Save to local storage
+        this.saveToLocalStorage(data)
+
+        // Save to local file with level in filename
+        const timestamp = new Date().toISOString().split('T')[0]
+        const filename = `copilot-metrics-${level}-${config.org}-${timestamp}.json`
+        
+        const jsonStr = JSON.stringify({
+          metadata: {
+            type: 'metrics',
+            level: level,
+            organization: config.org,
+            downloadedAt: new Date().toISOString(),
+            recordCount: data.length,
+            dateRange: {
+              from: data[0]?.date || 'unknown',
+              to: data[data.length - 1]?.date || 'unknown',
+            }
+          },
+          data: data
+        }, null, 2)
+
+        // Create blob and download
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
+        // Save config (without token)
+        this.saveConfig({
+          org: config.org,
+          token: '', // Don't save token
+          since: config.since,
+          until: config.until,
+          team_slug: config.team_slug,
+        })
+
+        const dateRange = {
+          from: data[0]?.date || 'unknown',
+          to: data[data.length - 1]?.date || 'unknown',
+        }
+
+        return {
+          success: true,
+          message: `${level.charAt(0).toUpperCase() + level.slice(1)} metrics data downloaded and saved to file`,
+          recordCount: data.length,
+          dateRange,
+        }
       }
     } catch (error) {
       console.error('Download error:', error)
@@ -529,8 +679,19 @@ class GitHubCopilotAPIService {
    * Clear saved data
    */
   clearLocalStorage(): void {
+    // Clear metrics data
     localStorage.removeItem(this.localStorageKey)
     localStorage.removeItem(`${this.localStorageKey}_timestamp`)
+    
+    // Clear agents data
+    localStorage.removeItem(this.agentsStorageKey)
+    localStorage.removeItem(`${this.agentsStorageKey}_timestamp`)
+    
+    // Clear seats data (enterprise and organization)
+    localStorage.removeItem('copilot_enterprise_seats_data')
+    localStorage.removeItem('copilot_enterprise_seats_data_timestamp')
+    localStorage.removeItem('copilot_org_seats_data')
+    localStorage.removeItem('copilot_org_seats_data_timestamp')
   }
 
   /**

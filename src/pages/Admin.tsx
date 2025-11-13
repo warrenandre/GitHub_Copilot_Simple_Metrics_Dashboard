@@ -60,7 +60,7 @@ const Admin = () => {
     setEnterpriseMetricsResult(null)
     setValidationErrors([])
 
-    const downloadResult = await githubApiService.downloadAndSave(config)
+    const downloadResult = await githubApiService.downloadAndSave(config, 'metrics', 'enterprise')
     setEnterpriseMetricsResult(downloadResult)
     setLoading(false)
 
@@ -86,7 +86,7 @@ const Admin = () => {
     setEnterpriseSeatsResult(null)
     setValidationErrors([])
 
-    const downloadResult = await githubApiService.downloadAndSave(config)
+    const downloadResult = await githubApiService.downloadAndSave(config, 'seats', 'enterprise')
     setEnterpriseSeatsResult(downloadResult)
     setLoading(false)
 
@@ -112,7 +112,7 @@ const Admin = () => {
     setOrgMetricsResult(null)
     setValidationErrors([])
 
-    const downloadResult = await githubApiService.downloadAndSave(config)
+    const downloadResult = await githubApiService.downloadAndSave(config, 'metrics', 'organization')
     setOrgMetricsResult(downloadResult)
     setLoading(false)
 
@@ -138,7 +138,7 @@ const Admin = () => {
     setOrgSeatsResult(null)
     setValidationErrors([])
 
-    const downloadResult = await githubApiService.downloadAndSave(config)
+    const downloadResult = await githubApiService.downloadAndSave(config, 'seats', 'organization')
     setOrgSeatsResult(downloadResult)
     setLoading(false)
 
@@ -379,20 +379,18 @@ const Admin = () => {
         <h2 className="text-xl font-semibold text-white mb-4">Data Management</h2>
         
         <div className="flex flex-wrap gap-3">
-          {dataStats && (
-            <button
-              onClick={handleClearData}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
-            >
-              <Trash2 className="w-5 h-5" />
-              Clear All Local Data
-            </button>
-          )}
+          <button
+            onClick={handleClearData}
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            Clear All Local Data
+          </button>
         </div>
 
         <div className="mt-4 text-sm text-slate-400">
-          <p><strong>Clear All Local Data:</strong> Removes all saved metrics data from browser local storage</p>
+          <p><strong>Clear All Local Data:</strong> Removes all saved metrics and seats data from browser local storage</p>
         </div>
       </div>
 

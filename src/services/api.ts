@@ -46,15 +46,17 @@ const generateMockData = (): CopilotMetricsResponse => {
 }
 
 class CopilotMetricsService {
-  private baseUrl: string
-  private token: string | null
+  // @ts-ignore - Reserved for production API usage
+  private _baseUrl: string
+  // @ts-ignore - Reserved for production API usage
+  private _token: string | null
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_GITHUB_API_URL || 'https://api.github.com'
-    this.token = import.meta.env.VITE_GITHUB_TOKEN || null
+    this._baseUrl = import.meta.env.VITE_GITHUB_API_URL || 'https://api.github.com'
+    this._token = import.meta.env.VITE_GITHUB_TOKEN || null
   }
 
-  async fetchMetrics(org: string, days = 28): Promise<CopilotMetricsResponse> {
+  async fetchMetrics(_org: string, _days = 28): Promise<CopilotMetricsResponse> {
     // For demo purposes, return mock data
     // In production, uncomment the API call below
     return new Promise((resolve) => {
