@@ -14,8 +14,9 @@ import {
   Zap,
   Settings,
   Building2,
+  Home,
   Building,
-  BarChart3,
+  Home as HomeIcon,
 } from 'lucide-react'
 import { initAppMetadata, checkSystemState } from '../utils/integrity'
 
@@ -26,10 +27,12 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [orgMetricsExpanded, setOrgMetricsExpanded] = useState(true)
-  const [demoExpanded, setDemoExpanded] = useState(true)
+  const [orgMetricsExpanded, setOrgMetricsExpanded] = useState(false)
+  const [demoExpanded, setDemoExpanded] = useState(false)
   const [liveExpanded, setLiveExpanded] = useState(false)
-  const [enterpriseExpanded, setEnterpriseExpanded] = useState(true)
+  const [enterpriseExpanded, setEnterpriseExpanded] = useState(false)
+  const [enterpriseDemoExpanded, setEnterpriseDemoExpanded] = useState(false)
+  const [enterpriseLiveExpanded, setEnterpriseLiveExpanded] = useState(false)
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
   const [appReady, setAppReady] = useState(true)
 
@@ -54,10 +57,11 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   const menuCategories = [
-    { path: '/', label: 'Overview', icon: LayoutDashboard },
-    { path: '/usage', label: 'Usage Metrics', icon: Activity },
-    { path: '/performance', label: 'Performance', icon: TrendingUp },
-    { path: '/adoption', label: 'Adoption', icon: Users },
+    { path: '/demo', label: 'Overview', icon: LayoutDashboard },
+    { path: '/demo/usage', label: 'Usage Metrics', icon: Activity },
+    { path: '/demo/performance', label: 'Performance', icon: TrendingUp },
+    { path: '/demo/adoption', label: 'Adoption', icon: Users },
+    { path: '/demo/seats', label: 'Seats', icon: Users },
   ]
 
   return (
@@ -80,8 +84,161 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {/* Org Metrics Section */}
+            {/* Home Link */}
+            <Link
+              to="/"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <HomeIcon className="w-5 h-5" />
+              <span className="font-medium text-sm">Home</span>
+            </Link>
+
+            <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
+
+            {/* Enterprise Metrics Section */}
             <div>
+              <button
+                onClick={() => setEnterpriseExpanded(!enterpriseExpanded)}
+                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Building className="w-5 h-5" />
+                  <span className="font-semibold text-sm uppercase tracking-wider">Enterprise Metrics</span>
+                </div>
+                {enterpriseExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+              {enterpriseExpanded && (
+                <div className="mt-1 space-y-2 ml-2">
+                  {/* Demo Section */}
+                  <div>
+                    <button
+                      onClick={() => setEnterpriseDemoExpanded(!enterpriseDemoExpanded)}
+                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Database className="w-5 h-5" />
+                        <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
+                      </div>
+                      {enterpriseDemoExpanded ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                    {enterpriseDemoExpanded && (
+                      <div className="mt-1 space-y-1 ml-2">
+                        <Link
+                          to="/enterprise/demo/seats"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/demo/seats'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span className="font-medium text-sm">Seats</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Live Section */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setEnterpriseLiveExpanded(!enterpriseLiveExpanded)}
+                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-5 h-5" />
+                        <span className="font-semibold text-sm uppercase tracking-wider">Live Data</span>
+                      </div>
+                      {enterpriseLiveExpanded ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                    {enterpriseLiveExpanded && (
+                      <div className="mt-1 space-y-1 ml-2">
+                        <Link
+                          to="/enterprise/overview"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/overview'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <Home className="w-5 h-5" />
+                          <span className="font-medium text-sm">Overview</span>
+                        </Link>
+                        <Link
+                          to="/enterprise/usage"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/usage'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <Activity className="w-5 h-5" />
+                          <span className="font-medium text-sm">Usage</span>
+                        </Link>
+                        <Link
+                          to="/enterprise/performance"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/performance'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <TrendingUp className="w-5 h-5" />
+                          <span className="font-medium text-sm">Performance</span>
+                        </Link>
+                        <Link
+                          to="/enterprise/adoption"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/adoption'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span className="font-medium text-sm">Adoption</span>
+                        </Link>
+                        <Link
+                          to="/enterprise/seats"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                            location.pathname === '/enterprise/seats'
+                              ? 'bg-orange-600 text-white'
+                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                          }`}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span className="font-medium text-sm">Seats</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Org Metrics Section */}
+            <div className="pt-2">
               <button
                 onClick={() => setOrgMetricsExpanded(!orgMetricsExpanded)}
                 className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
@@ -180,40 +337,6 @@ const Layout = ({ children }: LayoutProps) => {
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Enterprise Metrics Section */}
-            <div className="pt-2">
-              <button
-                onClick={() => setEnterpriseExpanded(!enterpriseExpanded)}
-                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  <span className="font-semibold text-sm uppercase tracking-wider">Enterprise Metrics</span>
-                </div>
-                {enterpriseExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {enterpriseExpanded && (
-                <div className="mt-1 space-y-1 ml-2">
-                  <Link
-                    to="/enterprise/usage-analytics"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/usage-analytics'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <BarChart3 className="w-5 h-5" />
-                    <span className="font-medium text-sm">Usage Analytics</span>
-                  </Link>
                 </div>
               )}
             </div>

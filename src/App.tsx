@@ -1,32 +1,54 @@
 import { Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
-import Overview from './pages/Overview'
-import Usage from './pages/Usage'
-import Performance from './pages/Performance'
-import Adoption from './pages/Adoption'
+import Home from './pages/Home'
+import Overview from './pages/demo/Overview'
+import Usage from './pages/demo/Usage'
+import Performance from './pages/demo/Performance'
+import Adoption from './pages/demo/Adoption'
+import Seats from './pages/demo/Seats'
 import LiveOverview from './pages/live/Overview'
 import LiveUsage from './pages/live/Usage'
 import LivePerformance from './pages/live/Performance'
 import LiveAdoption from './pages/live/Adoption'
+import LiveSeats from './pages/live/Seats'
 import Admin from './pages/Admin'
+import EnterpriseSeats from './pages/enterprise/Seats'
+import EnterpriseDemoSeats from './pages/enterprise/DemoSeats'
+import EnterpriseOverview from './pages/enterprise/Overview'
+import EnterpriseUsage from './pages/enterprise/Usage'
+import EnterprisePerformance from './pages/enterprise/Performance'
+import EnterpriseAdoption from './pages/enterprise/Adoption'
 
 function App() {
   return (
     <ThemeProvider>
       <Layout>
         <Routes>
+          {/* Home Route */}
+          <Route path="/" element={<Home />} />
+          
           {/* Demo Routes */}
-          <Route path="/" element={<Overview />} />
-          <Route path="/usage" element={<Usage />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/adoption" element={<Adoption />} />
+          <Route path="/demo" element={<Overview />} />
+          <Route path="/demo/usage" element={<Usage />} />
+          <Route path="/demo/performance" element={<Performance />} />
+          <Route path="/demo/adoption" element={<Adoption />} />
+          <Route path="/demo/seats" element={<Seats />} />
           
           {/* Live Routes */}
           <Route path="/live" element={<LiveOverview />} />
           <Route path="/live/usage" element={<LiveUsage />} />
           <Route path="/live/performance" element={<LivePerformance />} />
           <Route path="/live/adoption" element={<LiveAdoption />} />
+          <Route path="/live/seats" element={<LiveSeats />} />
+          
+          {/* Enterprise Routes */}
+          <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
+          <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
+          <Route path="/enterprise/overview" element={<EnterpriseOverview />} />
+          <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
+          <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
+          <Route path="/enterprise/adoption" element={<EnterpriseAdoption />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />

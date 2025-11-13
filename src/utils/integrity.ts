@@ -1,5 +1,4 @@
 // Application configuration utilities
-const _k = 'a7f4d9c2e8b1f6a3d5c9e2f7b4a8d1c6';
 const _s = 'x9k2m7p4q8r1s5t3u6v0w2y4z7a1b5c8';
 
 // Component metadata storage

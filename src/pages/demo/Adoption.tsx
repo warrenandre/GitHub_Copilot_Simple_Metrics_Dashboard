@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Users, UserPlus, Percent, TrendingUp } from 'lucide-react'
-import MetricCard from '../components/MetricCard'
-import LineChart from '../components/LineChart'
-import PieChart from '../components/PieChart'
-import BarChart from '../components/BarChart'
-import DateRangeSelector, { DateRange } from '../components/DateRangeSelector'
-import { metricsService } from '../services/api'
-import { CopilotMetricsResponse, LineChartData, ChartData } from '../types/metrics'
+import MetricCard from '../../components/MetricCard'
+import LineChart from '../../components/LineChart'
+import PieChart from '../../components/PieChart'
+import BarChart from '../../components/BarChart'
+import DateRangeSelector, { DateRange } from '../../components/DateRangeSelector'
+import { metricsService } from '../../services/api'
+import { CopilotMetricsResponse, LineChartData, ChartData } from '../../types/metrics'
 
 const Adoption = () => {
   const [metrics, setMetrics] = useState<CopilotMetricsResponse | null>(null)
