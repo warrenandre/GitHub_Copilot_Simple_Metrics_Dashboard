@@ -458,6 +458,10 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 light:text-gray-500">Version</p>
+              <p className="text-xs font-bold text-blue-400">v1.0.0</p>
+            </div>
             <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
               {footerText}
             </p>
