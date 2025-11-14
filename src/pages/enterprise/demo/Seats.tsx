@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, UserCheck, Calendar, Activity, GitBranch, Building, Download } from 'lucide-react'
+import { Users, UserCheck, Calendar, Activity, GitBranch, Building, Download,Sparkles } from 'lucide-react'
 
 // Demo data
 const demoSeatsData = {
@@ -213,9 +213,16 @@ const EnterpriseDemoSeats = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Enterprise Copilot Seats (Demo)</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Enterprise Copilot Seats</h1>
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              DEMO DATA
+            </span>
+          </div>
           <p className="text-slate-400">Demo view of GitHub Copilot seat assignments for enterprise</p>
         </div>
+        
         <button
           onClick={handleDownload}
           className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
