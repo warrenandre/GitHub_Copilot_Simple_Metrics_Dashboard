@@ -1,13 +1,13 @@
 {
-  "version": "1.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "name": "ghcp-dashboard",
   "scripts": {
     "start": "npx serve dist -l 8080 --single"
   },
-  "name": "ghcp-dashboard",
   "dependencies": {
     "serve": "^14.2.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "version": "1.0.0"
 }

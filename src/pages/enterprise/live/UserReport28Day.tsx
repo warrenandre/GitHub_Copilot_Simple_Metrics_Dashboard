@@ -533,7 +533,7 @@ const UserReport28Day = () => {
               colors={{ scheme: "nivo" }}
               pointSize={8}
               pointBorderWidth={2}
-              pointBorderColor={{ from: "serieColor" }}
+              pointBorderColor={{ from: "seriesColor" }}
               enableArea={true}
               areaOpacity={0.1}
               useMesh={true}
@@ -760,7 +760,7 @@ const UserReport28Day = () => {
               }}
               labelSkipWidth={12}
               labelSkipHeight={12}
-              tooltip={({ id, value, indexValue, color }) => (
+              tooltip={({  value, indexValue, color }) => (
                 <div
                   style={{
                     background: "#1F2937",
@@ -812,7 +812,7 @@ const UserReport28Day = () => {
               colors={{ scheme: "set2" }}
               pointSize={8}
               pointBorderWidth={2}
-              pointBorderColor={{ from: "serieColor" }}
+              pointBorderColor={{ from: "seriesColor" }}
               useMesh={true}
               tooltip={({ point }) => (
                 <div
@@ -823,8 +823,8 @@ const UserReport28Day = () => {
                     borderRadius: "4px",
                   }}
                 >
-                  <div style={{ color: point.serieColor, fontWeight: 600 }}>
-                    {point.serieId}
+                  <div style={{ color: point.seriesColor, fontWeight: 600 }}>
+                    {point.seriesId}
                   </div>
                   <div style={{ color: "#F9FAFB", marginTop: "4px" }}>
                     Date: {point.data.xFormatted}

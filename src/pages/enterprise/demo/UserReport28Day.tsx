@@ -783,7 +783,7 @@ const DemoUserReport28Day = () => {
                 }}
                 labelSkipWidth={12}
                 labelSkipHeight={12}
-                tooltip={({ id, value, indexValue, color }) => (
+                tooltip={({ value, indexValue, color }) => (
                   <div style={{
                     background: '#1F2937',
                     padding: '9px 12px',
@@ -869,8 +869,8 @@ const DemoUserReport28Day = () => {
                 border: '1px solid #374151',
                 borderRadius: '4px'
               }}>
-                <div style={{ color: point.serieColor, fontWeight: 600 }}>
-                  {point.serieId}
+                <div style={{ color: point.seriesColor, fontWeight: 600 }}>
+                  {point.seriesId}
                 </div>
                 <div style={{ color: '#F9FAFB', marginTop: '4px' }}>
                   Date: {point.data.xFormatted}
