@@ -475,7 +475,7 @@ const DemoUserReport28Day = () => {
               </p>
             </div>
             <div className="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-lg">
-              <Sparkles className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+              <Cpu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
             </div>
           </div>
         </div>
@@ -489,7 +489,7 @@ const DemoUserReport28Day = () => {
               </p>
             </div>
             <div className="bg-cyan-100 dark:bg-cyan-900/30 p-3 rounded-lg">
-              <Cpu className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+              <User className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
             </div>
           </div>
         </div>
