@@ -213,7 +213,7 @@ const DemoUserReport28Day = () => {
     const featureTotals: Record<string, number> = {}
     
     filteredData.forEach(record => {
-      record.totals_by_feature.forEach(feature => {
+      record.totals_by_feature?.forEach(feature => {
         if (!featureTotals[feature.feature]) {
           featureTotals[feature.feature] = 0
         }
@@ -238,7 +238,7 @@ const DemoUserReport28Day = () => {
     const languageTotals: Record<string, number> = {}
     
     filteredData.forEach(record => {
-      record.totals_by_language_model.forEach(lang => {
+      record.totals_by_language_model?.forEach(lang => {
         if (lang.language === 'unknown') return
         if (!languageTotals[lang.language]) {
           languageTotals[lang.language] = 0
@@ -264,7 +264,7 @@ const DemoUserReport28Day = () => {
     const modelTotals: Record<string, number> = {}
     
     filteredData.forEach(record => {
-      record.totals_by_model_feature.forEach(model => {
+      record.totals_by_model_feature?.forEach(model => {
         if (model.model === 'unknown') return
         if (!modelTotals[model.model]) {
           modelTotals[model.model] = 0
@@ -290,7 +290,7 @@ const DemoUserReport28Day = () => {
     const ideTotals: Record<string, number> = {}
     
     filteredData.forEach(record => {
-      record.totals_by_ide.forEach(ide => {
+      record.totals_by_ide?.forEach(ide => {
         if (!ideTotals[ide.ide]) {
           ideTotals[ide.ide] = 0
         }
