@@ -87,20 +87,8 @@ const DemoUserReport28Day = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
   const [selectedUser, setSelectedUser] = useState<string>('all')
 
-  // Load data from localStorage or use demo data as fallback
-  const reportData: UserReportData = useMemo(() => {
-    const data = localStorage.getItem('user_report_data')
-    if (data) {
-      try {
-        return JSON.parse(data)
-      } catch {
-        // Fall back to demo data if localStorage is corrupted
-        return demoUser28DayReportData
-      }
-    }
-    // Use demo data by default
-    return demoUser28DayReportData
-  }, [])
+  // Always use demo data
+  const reportData: UserReportData = demoUser28DayReportData
 
   // Get unique users
   const uniqueUsers = useMemo(() => {
