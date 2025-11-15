@@ -524,8 +524,8 @@ const DemoUserReport28Day = () => {
                 border: '1px solid #374151',
                 borderRadius: '4px'
               }}>
-                <div style={{ color: point.serieColor, fontWeight: 600 }}>
-                  {point.serieId}
+                <div style={{ color: point.seriesColor, fontWeight: 600 }}>
+                  {point.seriesId}
                 </div>
                 <div style={{ color: '#F9FAFB', marginTop: '4px' }}>
                   Date: {point.data.xFormatted}
