@@ -20,6 +20,7 @@ const Admin = () => {
   const [enterpriseMetricsResult, setEnterpriseMetricsResult] = useState<DownloadResult | null>(null)
   const [enterpriseSeatsResult, setEnterpriseSeatsResult] = useState<DownloadResult | null>(null)
   const [enterprise28DayReportResult, setEnterprise28DayReportResult] = useState<DownloadResult | null>(null)
+  const [user28DayReportResult, setUser28DayReportResult] = useState<DownloadResult | null>(null)
   const [orgMetricsResult, setOrgMetricsResult] = useState<DownloadResult | null>(null)
   const [orgSeatsResult, setOrgSeatsResult] = useState<DownloadResult | null>(null)
   const [dataStats, setDataStats] = useState<ReturnType<typeof githubApiService.getDataStats>>(null)
@@ -126,6 +127,32 @@ const Admin = () => {
     }
   }
 
+  const handleDownloadUser28DayReport = async () => {
+    // Validate configuration
+    const validation = validateApiConfig(config)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      setUser28DayReportResult({
+        success: false,
+        message: 'Please fix validation errors before proceeding',
+      })
+      return
+    }
+
+    setLoading(true)
+    setUser28DayReportResult(null)
+    setValidationErrors([])
+
+    const downloadResult = await githubApiService.downloadUser28DayReport(config)
+    setUser28DayReportResult(downloadResult)
+    setLoading(false)
+
+    if (downloadResult.success) {
+      saveApiConfig(config)
+      updateDataStats()
+    }
+  }
+
   const handleUpload28DayReport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -166,6 +193,73 @@ const Admin = () => {
         updateDataStats()
       } catch (error) {
         setEnterprise28DayReportResult({
+          success: false,
+          message: error instanceof Error ? error.message : 'Failed to parse uploaded file',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const handleUploadUser28DayReport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        
+        // Parse NDJSON format (newline-delimited JSON)
+        const lines = content.trim().split('\n')
+        const userDayRecords = lines.map((line, index) => {
+          try {
+            return JSON.parse(line)
+          } catch (err) {
+            throw new Error(`Failed to parse line ${index + 1}: ${err instanceof Error ? err.message : String(err)}`)
+          }
+        })
+        
+        // Validate format - each line should have user_id, day, and user_login
+        if (userDayRecords.length === 0 || !userDayRecords[0].user_id || !userDayRecords[0].day) {
+          setUser28DayReportResult({
+            success: false,
+            message: 'Invalid file format. Expected NDJSON with user activity records (each line is a JSON object).',
+          })
+          return
+        }
+
+        // Extract metadata from first record
+        const firstRecord = userDayRecords[0]
+        const reportData = {
+          report_start_day: firstRecord.report_start_day,
+          report_end_day: firstRecord.report_end_day,
+          enterprise_id: firstRecord.enterprise_id,
+          records: userDayRecords
+        }
+
+        // Get unique users
+        const uniqueUsers = new Set(userDayRecords.map(r => r.user_login))
+
+        // Save to localStorage
+        const storageKey = 'user_report_data'
+        localStorage.setItem(storageKey, JSON.stringify(reportData))
+        localStorage.setItem(`${storageKey}_timestamp`, new Date().toISOString())
+
+        setUser28DayReportResult({
+          success: true,
+          message: `User 28-day report uploaded successfully (${userDayRecords.length} records, ${uniqueUsers.size} unique users)`,
+          recordCount: userDayRecords.length,
+          dateRange: {
+            from: reportData.report_start_day || 'unknown',
+            to: reportData.report_end_day || 'unknown',
+          }
+        })
+        
+        updateDataStats()
+      } catch (error) {
+        setUser28DayReportResult({
           success: false,
           message: error instanceof Error ? error.message : 'Failed to parse uploaded file',
           error: error instanceof Error ? error.message : String(error),
@@ -237,6 +331,7 @@ const Admin = () => {
       })
       setEnterpriseSeatsResult(null)
       setEnterprise28DayReportResult(null)
+      setUser28DayReportResult(null)
       setOrgMetricsResult(null)
       setOrgSeatsResult(null)
     }
@@ -490,6 +585,40 @@ const Admin = () => {
         </div>
       </div>
 
+      {/* User 28-Day Report */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h2 className="text-xl font-semibold text-white mb-4">User 28-Day Report</h2>
+        
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleDownloadUser28DayReport}
+            disabled={isDemoMode || loading || !config.org || !config.token}
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+          >
+            <Save className="w-5 h-5" />
+            {loading ? 'Downloading...' : 'Get Download Link'}
+          </button>
+          
+          <label className={`flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors ${isDemoMode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+            <Save className="w-5 h-5" />
+            Upload Report File
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleUploadUser28DayReport}
+              disabled={isDemoMode}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 text-sm text-slate-400">
+          <p><strong>Get Download Link:</strong> Fetches the download URL for the user 28-day report. Due to CORS restrictions, the file will open in a new tab.</p>
+          <p className="mt-1"><strong>Upload Report File:</strong> After downloading the JSON file from the link, upload it here to visualize the data.</p>
+          <p className="mt-1 text-xs">Data is stored in <code className="bg-slate-900 px-1 rounded">user_report_data</code> for visualization</p>
+        </div>
+      </div>
+
       {/* Organization Metrics */}
       <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
         <h2 className="text-xl font-semibold text-white mb-4">Organization Copilot Data</h2>
@@ -648,6 +777,44 @@ const Admin = () => {
               )}
               {enterprise28DayReportResult.error && (
                 <p className="text-xs text-slate-400 mt-2 font-mono">{enterprise28DayReportResult.error}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User 28-Day Report Result Message */}
+      {user28DayReportResult && (
+        <div className={`rounded-lg p-4 border ${
+          user28DayReportResult.success
+            ? 'bg-indigo-500 bg-opacity-10 border-indigo-500'
+            : 'bg-red-500 bg-opacity-10 border-red-500'
+        }`}>
+          <div className="flex items-start gap-3">
+            {user28DayReportResult.success ? (
+              <CheckCircle className="w-5 h-5 text-indigo-400 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <h3 className={`text-sm font-semibold mb-1 ${
+                user28DayReportResult.success ? 'text-indigo-400' : 'text-red-400'
+              }`}>
+                {user28DayReportResult.success ? 'User 28-Day Report Success' : 'User 28-Day Report Error'}
+              </h3>
+              <p className="text-sm text-slate-300">{user28DayReportResult.message}</p>
+              {user28DayReportResult.recordCount && (
+                <p className="text-sm text-slate-300 mt-1">
+                  Records downloaded: <strong>{user28DayReportResult.recordCount}</strong>
+                </p>
+              )}
+              {user28DayReportResult.dateRange && (
+                <p className="text-sm text-slate-300">
+                  Date range: <strong>{user28DayReportResult.dateRange.from}</strong> to <strong>{user28DayReportResult.dateRange.to}</strong>
+                </p>
+              )}
+              {user28DayReportResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{user28DayReportResult.error}</p>
               )}
             </div>
           </div>

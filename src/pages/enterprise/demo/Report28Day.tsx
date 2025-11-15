@@ -218,14 +218,14 @@ const DemoReport28Day = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Enterprise 28-Day Report</h1>
-          <p className="text-slate-400">Comprehensive analysis of Copilot usage and productivity</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg">
-            <Sparkles className="w-5 h-5 text-yellow-400" />
-            <span className="text-sm font-semibold text-yellow-400">DEMO DATA</span>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Enterprise 28-Day Report</h1>
+            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" />
+              DEMO DATA
+            </span>
           </div>
+          <p className="text-slate-400">Comprehensive analysis of Copilot usage and productivity</p>
         </div>
       </div>
 

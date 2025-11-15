@@ -19,6 +19,7 @@ import EnterpriseUsage from './pages/enterprise/live/Usage'
 import EnterprisePerformance from './pages/enterprise/live/Performance'
 import EnterpriseAdoption from './pages/enterprise/live/Adoption'
 import EnterpriseReport28Day from './pages/enterprise/live/Report28Day'
+import EnterpriseUserReport28Day from './pages/enterprise/live/UserReport28Day'
 import EnterpriseInsights from './pages/enterprise/live/Insights'
 import EnterpriseDemoSeats from './pages/enterprise/demo/Seats'
 import EnterpriseDemoOverview from './pages/enterprise/demo/Overview'
@@ -26,6 +27,7 @@ import EnterpriseDemoUsage from './pages/enterprise/demo/Usage'
 import EnterpriseDemoPerformance from './pages/enterprise/demo/Performance'
 import EnterpriseDemoAdoption from './pages/enterprise/demo/Adoption'
 import EnterpriseDemoReport28Day from './pages/enterprise/demo/Report28Day'
+import EnterpriseDemoUserReport28Day from './pages/enterprise/demo/UserReport28Day'
 import EnterpriseDemoInsights from './pages/enterprise/demo/Insights'
 
 function App() {
@@ -58,6 +60,7 @@ function App() {
           <Route path="/enterprise/demo/insights" element={<EnterpriseDemoInsights />} />
           <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
           <Route path="/enterprise/demo/report" element={<EnterpriseDemoReport28Day />} />
+          <Route path="/enterprise/demo/user-report" element={<EnterpriseDemoUserReport28Day />} />
           <Route path="/enterprise/overview" element={<EnterpriseOverview />} />
           <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
           <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
@@ -65,6 +68,7 @@ function App() {
           <Route path="/enterprise/insights" element={<EnterpriseInsights />} />
           <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
           <Route path="/enterprise/report" element={<EnterpriseReport28Day />} />
+          <Route path="/enterprise/user-report" element={<EnterpriseUserReport28Day />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />
