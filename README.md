@@ -327,6 +327,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - feel free to use this project for your own purposes.
 
+## ⚠️ Usage Terms
+The application footer containing developer attribution must remain intact...
+
 ## Acknowledgments
 
 - GitHub Copilot for powering AI-assisted development
