@@ -3,7 +3,9 @@ import { Code, MessageSquare, TrendingUp, FileCode, RefreshCw, Calendar } from '
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsivePie } from '@nivo/pie'
 import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import DataSourceToggle from '../../../components/DataSourceToggle'
 import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demoEnterpriseMetrics } from '../../../data/demoEnterpriseData'
 
 interface MetricsData {
   date: string
@@ -45,6 +47,7 @@ const EnterpriseUsageMetrics = () => {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
+  const [isDemo, setIsDemo] = useState(false)
 
   const loadMetricsData = () => {
     setLoading(true)
@@ -62,19 +65,32 @@ const EnterpriseUsageMetrics = () => {
           setDateRange(parsedData.metadata.dateRange)
         }
       } else {
-        setError('No enterprise metrics data available')
+        // Don't auto-switch to demo, just clear data to show no data message
+        setMetricsData([])
       }
     } catch (err) {
-      setError('Failed to load enterprise metrics data')
       console.error('Error loading metrics data:', err)
+      setMetricsData([])
+      setError('Failed to load metrics data')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadMetricsData()
-  }, [])
+    if (!isDemo) {
+      loadMetricsData()
+    } else {
+      // Use demo data
+      setMetricsData(demoEnterpriseMetrics as unknown as MetricsData[])
+      setDateRange({
+        from: demoEnterpriseMetrics[0]?.date || '',
+        to: demoEnterpriseMetrics[demoEnterpriseMetrics.length - 1]?.date || ''
+      })
+      setLoading(false)
+      setError(null)
+    }
+  }, [isDemo])
 
   // Filter data based on selected date range
   const filteredData = useMemo(() => {
@@ -92,14 +108,34 @@ const EnterpriseUsageMetrics = () => {
     )
   }
 
-  if (error || metricsData.length === 0) {
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && (error || metricsData.length === 0)) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Enterprise Usage Metrics</h1>
-        <div className="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
-          <Code className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Data Available</h3>
-          <p className="text-slate-400">Please download enterprise metrics from the Admin page.</p>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Enterprise Usage Metrics</h1>
+            <p className="text-slate-400">Code completion and chat usage statistics</p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+        </div>
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Code className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no live data available. To view live enterprise usage metrics:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Download enterprise metrics data using the "Download Data" button</li>
+            <li>Return to this page to view your live metrics</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
         </div>
       </div>
     )
@@ -190,17 +226,20 @@ const EnterpriseUsageMetrics = () => {
           <p className="text-slate-400">Code completions, chat usage, and language breakdown</p>
         </div>
         <div className="flex items-center gap-3">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
           <DateRangeFilter
             selectedRange={selectedRange}
             onRangeChange={setSelectedRange}
           />
-          <button
-            onClick={loadMetricsData}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          {!isDemo && (
+            <button
+              onClick={loadMetricsData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          )}
         </div>
       </div>
 

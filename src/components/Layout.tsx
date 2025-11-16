@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
-  Zap,
   Settings,
   Building2,
   Home,
@@ -21,7 +20,8 @@ import {
   Lightbulb,
   User,
 } from 'lucide-react'
-import { initAppMetadata, checkSystemState } from '../utils/integrity'
+import { initAppMetadata, checkSystemState, startPeriodicValidation, monitorFooterElement } from '../utils/integrity'
+import { useFooterProtection } from '../hooks/useFooterProtection'
 
 interface LayoutProps {
   children: ReactNode
@@ -32,12 +32,24 @@ const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [orgMetricsExpanded, setOrgMetricsExpanded] = useState(false)
   const [demoExpanded, setDemoExpanded] = useState(false)
-  const [liveExpanded, setLiveExpanded] = useState(false)
   const [enterpriseExpanded, setEnterpriseExpanded] = useState(false)
   const [enterpriseDemoExpanded, setEnterpriseDemoExpanded] = useState(false)
-  const [enterpriseLiveExpanded, setEnterpriseLiveExpanded] = useState(false)
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
   const [appReady, setAppReady] = useState(true)
+  
+  // Feature flag for showing demo links (default: false for production)
+  const [showDemoLinks, setShowDemoLinks] = useState(() => {
+    const saved = localStorage.getItem('showDemoLinks')
+    return saved !== null ? saved === 'true' : false
+  })
+
+  // Persist feature flag to localStorage
+  useEffect(() => {
+    localStorage.setItem('showDemoLinks', String(showDemoLinks))
+  }, [showDemoLinks])
+
+  // Activate footer protection
+  useFooterProtection();
 
   useEffect(() => {
     try {
@@ -45,6 +57,10 @@ const Layout = ({ children }: LayoutProps) => {
         const metadata = initAppMetadata();
         setFooterText(metadata);
         setAppReady(true);
+        
+        // Start periodic validation and monitoring
+        startPeriodicValidation();
+        monitorFooterElement();
       } else {
         console.error('System state validation failed');
         setAppReady(false);
@@ -64,7 +80,6 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/demo/usage', label: 'Usage Metrics', icon: Activity },
     { path: '/demo/performance', label: 'Performance', icon: TrendingUp },
     { path: '/demo/adoption', label: 'Adoption', icon: Users },
-    { path: '/demo/seats', label: 'Seats', icon: Users },
   ]
 
   return (
@@ -122,21 +137,22 @@ const Layout = ({ children }: LayoutProps) => {
               {enterpriseExpanded && (
                 <div className="mt-1 space-y-2 ml-2">
                   {/* Demo Section */}
-                  <div>
-                    <button
-                      onClick={() => setEnterpriseDemoExpanded(!enterpriseDemoExpanded)}
-                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Database className="w-5 h-5" />
-                        <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
-                      </div>
-                      {enterpriseDemoExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
+                  {showDemoLinks && (
+                    <div>
+                      <button
+                        onClick={() => setEnterpriseDemoExpanded(!enterpriseDemoExpanded)}
+                        className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Database className="w-5 h-5" />
+                          <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
+                        </div>
+                        {enterpriseDemoExpanded ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </button>
                     {enterpriseDemoExpanded && (
                       <div className="mt-1 space-y-1 ml-2">
                         <Link
@@ -238,124 +254,105 @@ const Layout = ({ children }: LayoutProps) => {
                       </div>
                     )}
                   </div>
+                  )}
 
-                  {/* Live Section */}
-                  <div className="pt-2">
-                    <button
-                      onClick={() => setEnterpriseLiveExpanded(!enterpriseLiveExpanded)}
-                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-5 h-5" />
-                        <span className="font-semibold text-sm uppercase tracking-wider">Live Data</span>
-                      </div>
-                      {enterpriseLiveExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
-                    {enterpriseLiveExpanded && (
-                      <div className="mt-1 space-y-1 ml-2">
-                        <Link
-                          to="/enterprise/overview"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/overview'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Home className="w-5 h-5" />
-                          <span className="font-medium text-sm">Overview</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/usage"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/usage'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Activity className="w-5 h-5" />
-                          <span className="font-medium text-sm">Usage</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/performance"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/performance'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <TrendingUp className="w-5 h-5" />
-                          <span className="font-medium text-sm">Performance</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/adoption"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/adoption'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Users className="w-5 h-5" />
-                          <span className="font-medium text-sm">Adoption</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/insights"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/insights'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Lightbulb className="w-5 h-5" />
-                          <span className="font-medium text-sm">Insights</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/seats"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/seats'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Users className="w-5 h-5" />
-                          <span className="font-medium text-sm">Seats</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/report"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/report'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <FileBarChart className="w-5 h-5" />
-                          <span className="font-medium text-sm">28-Day Report</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/user-report"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/user-report'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <User className="w-5 h-5" />
-                          <span className="font-medium text-sm">User 28-Day Report</span>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+                  {/* Live Links - Direct under Enterprise Metrics */}
+                  <Link
+                    to="/enterprise/overview"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/overview'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Home className="w-5 h-5" />
+                    <span className="font-medium text-sm">Overview</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/usage"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/usage'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Activity className="w-5 h-5" />
+                    <span className="font-medium text-sm">Usage</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/performance"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/performance'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <TrendingUp className="w-5 h-5" />
+                    <span className="font-medium text-sm">Performance</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/adoption"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/adoption'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium text-sm">Adoption</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/insights"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/insights'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Lightbulb className="w-5 h-5" />
+                    <span className="font-medium text-sm">Insights</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/seats"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/seats'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium text-sm">Seats</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/report"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/report'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <FileBarChart className="w-5 h-5" />
+                    <span className="font-medium text-sm">28-Day Report</span>
+                  </Link>
+                  <Link
+                    to="/enterprise/user-report"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/enterprise/user-report'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="font-medium text-sm">User 28-Day Report</span>
+                  </Link>
                 </div>
               )}
             </div>
@@ -379,87 +376,97 @@ const Layout = ({ children }: LayoutProps) => {
               {orgMetricsExpanded && (
                 <div className="mt-1 space-y-2 ml-2">
                   {/* Demo Section */}
-                  <div>
-                    <button
-                      onClick={() => setDemoExpanded(!demoExpanded)}
-                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Database className="w-5 h-5" />
-                        <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
-                      </div>
-                      {demoExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
+                  {showDemoLinks && (
+                    <div>
+                      <button
+                        onClick={() => setDemoExpanded(!demoExpanded)}
+                        className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Database className="w-5 h-5" />
+                          <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
+                        </div>
+                        {demoExpanded ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </button>
+                      {demoExpanded && (
+                        <div className="mt-1 space-y-1 ml-2">
+                          {menuCategories.map((item) => {
+                            const Icon = item.icon
+                            const isActive = location.pathname === item.path
+                            return (
+                              <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                                  isActive
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                                }`}
+                              >
+                                <Icon className="w-5 h-5" />
+                                <span className="font-medium text-sm">{item.label}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
                       )}
-                    </button>
-                    {demoExpanded && (
-                      <div className="mt-1 space-y-1 ml-2">
-                        {menuCategories.map((item) => {
-                          const Icon = item.icon
-                          const isActive = location.pathname === item.path
-                          return (
-                            <Link
-                              key={item.path}
-                              to={item.path}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                                isActive
-                                  ? 'bg-blue-600 text-white'
-                                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                              }`}
-                            >
-                              <Icon className="w-5 h-5" />
-                              <span className="font-medium text-sm">{item.label}</span>
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  {/* Live Section */}
-                  <div className="pt-2">
-                    <button
-                      onClick={() => setLiveExpanded(!liveExpanded)}
-                      className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-5 h-5" />
-                        <span className="font-semibold text-sm uppercase tracking-wider">Live Data</span>
-                      </div>
-                      {liveExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
-                    {liveExpanded && (
-                      <div className="mt-1 space-y-1 ml-2">
-                        {menuCategories.map((item) => {
-                          const Icon = item.icon
-                          const livePath = `/live${item.path === '/' ? '' : item.path}`
-                          const isActive = location.pathname === livePath
-                          return (
-                            <Link
-                              key={livePath}
-                              to={livePath}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                                isActive
-                                  ? 'bg-green-600 text-white'
-                                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                              }`}
-                            >
-                              <Icon className="w-5 h-5" />
-                              <span className="font-medium text-sm">{item.label}</span>
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  {/* Live Links - Direct under Org Metrics */}
+                  <Link
+                    to="/live"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/live'
+                        ? 'bg-green-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span className="font-medium text-sm">Overview</span>
+                  </Link>
+                  <Link
+                    to="/live/usage"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/live/usage'
+                        ? 'bg-green-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Activity className="w-5 h-5" />
+                    <span className="font-medium text-sm">Usage Metrics</span>
+                  </Link>
+                  <Link
+                    to="/live/performance"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/live/performance'
+                        ? 'bg-green-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <TrendingUp className="w-5 h-5" />
+                    <span className="font-medium text-sm">Performance</span>
+                  </Link>
+                  <Link
+                    to="/live/adoption"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/live/adoption'
+                        ? 'bg-green-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium text-sm">Adoption</span>
+                  </Link>
                 </div>
               )}
             </div>
@@ -478,11 +485,30 @@ const Layout = ({ children }: LayoutProps) => {
                 <Settings className="w-5 h-5" />
                 <span className="font-medium text-sm">Admin Settings</span>
               </Link>
+              
+              {/* Demo Links Toggle */}
+              <button
+                onClick={() => setShowDemoLinks(!showDemoLinks)}
+                className="flex items-center justify-between w-full px-4 py-2.5 mt-2 rounded-lg transition-colors text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900"
+              >
+                <div className="flex items-center gap-3">
+                  <Database className="w-5 h-5" />
+                  <span className="font-medium text-sm">Demo Links</span>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-colors ${showDemoLinks ? 'bg-blue-600' : 'bg-slate-600'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white mt-0.5 transition-transform ${showDemoLinks ? 'ml-5' : 'ml-0.5'}`}></div>
+                </div>
+              </button>
             </div>
           </nav>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
+          {/* Footer - Protected Component */}
+          <div 
+            className="px-6 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"
+            data-footer-protected="true"
+            suppressContentEditableWarning
+            suppressHydrationWarning
+          >
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 light:text-gray-500">Version</p>
               <p className="text-xs font-bold text-blue-400">v1.0.0</p>

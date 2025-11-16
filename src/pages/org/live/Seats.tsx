@@ -1,5 +1,6 @@
 import { Users, UserCheck, Calendar, Activity, GitBranch, Building2, Building, AlertCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import DataSourceToggle from '../../../components/DataSourceToggle'
 
 interface SeatAssignee {
   login: string
@@ -37,32 +38,66 @@ const LiveSeats = () => {
   const [orgSeats, setOrgSeats] = useState<SeatsData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
   
   useEffect(() => {
     loadSeatsData()
-  }, [])
+  }, [isDemo])
 
-  const loadSeatsData = () => {
+  const loadSeatsData = async () => {
     setLoading(true)
     setError(null)
     
     try {
-      // Try to load seats data from localStorage
-      const enterpriseData = localStorage.getItem('copilot_enterprise_seats_data')
-      const orgData = localStorage.getItem('copilot_org_seats_data')
-      
-      if (enterpriseData) {
-        const parsed = JSON.parse(enterpriseData)
-        setEnterpriseSeats(parsed.data || parsed)
+      if (!isDemo) {
+        // Try to load seats data from localStorage
+        const enterpriseData = localStorage.getItem('copilot_enterprise_seats_data')
+        const orgData = localStorage.getItem('copilot_org_seats_data')
+        
+        if (enterpriseData) {
+          const parsed = JSON.parse(enterpriseData)
+          setEnterpriseSeats(parsed.data || parsed)
+        }
+        
+        if (orgData) {
+          const parsed = JSON.parse(orgData)
+          setOrgSeats(parsed.data || parsed)
+        }
+        
+        if (!enterpriseData && !orgData) {
+          // No live data available, switch to demo mode
+          setIsDemo(true)
+        }
       }
       
-      if (orgData) {
-        const parsed = JSON.parse(orgData)
-        setOrgSeats(parsed.data || parsed)
-      }
-      
-      if (!enterpriseData && !orgData) {
-        setError('No seats data found. Please download seats data from the Admin page first.')
+      if (isDemo || (!localStorage.getItem('copilot_enterprise_seats_data') && !localStorage.getItem('copilot_org_seats_data'))) {
+        // Load demo seats data (generate synthetic data for demonstration)
+        // Create demo seats data structure
+        const demoSeatsData: SeatsData = {
+          total_seats: 50,
+          seats: Array.from({ length: 50 }, (_, i) => ({
+            created_at: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+            assignee: {
+              login: `developer${i + 1}`,
+              avatar_url: `https://avatars.githubusercontent.com/u/${i + 1}?v=4`,
+              html_url: `https://github.com/developer${i + 1}`,
+              type: 'User'
+            },
+            plan_type: Math.random() > 0.5 ? 'enterprise' : 'business',
+            last_activity_at: Math.random() > 0.2 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : null,
+            last_activity_editor: Math.random() > 0.2 ? ['vscode', 'jetbrains', 'visualstudio'][Math.floor(Math.random() * 3)] : null,
+            last_authenticated_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            pending_cancellation_date: null,
+            assigning_team: Math.random() > 0.7 ? {
+              name: `Team ${String.fromCharCode(65 + Math.floor(Math.random() * 5))}`,
+              slug: `team-${String.fromCharCode(97 + Math.floor(Math.random() * 5))}`
+            } : undefined
+          }))
+        }
+        
+        setEnterpriseSeats(demoSeatsData)
+        setOrgSeats(demoSeatsData)
       }
     } catch (err) {
       console.error('Failed to load seats data:', err)
@@ -180,12 +215,17 @@ const LiveSeats = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Copilot Seats - Live Data</h1>
           <p className="text-slate-400">View and analyze GitHub Copilot seat assignments</p>
         </div>
-        <button
-          onClick={loadSeatsData}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          Refresh Data
-        </button>
+        <div className="flex items-center gap-4">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+          {!isDemo && (
+            <button
+              onClick={loadSeatsData}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Refresh Data
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Level Selector */}

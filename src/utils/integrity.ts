@@ -78,3 +78,55 @@ export function validateMount(): void {
     throw new Error('System validation failed.');
   }
 }
+
+// Periodic validation to ensure footer remains intact
+let _validationInterval: number | null = null;
+
+export function startPeriodicValidation(): void {
+  // Validate immediately
+  validateMount();
+  
+  // Then validate every 5 minutes
+  if (!_validationInterval) {
+    _validationInterval = setInterval(() => {
+      if (!checkSystemState()) {
+        console.error('Runtime validation failed');
+        window.location.reload();
+      }
+    }, 300000); // 5 minutes
+  }
+}
+
+export function stopPeriodicValidation(): void {
+  if (_validationInterval) {
+    clearInterval(_validationInterval);
+    _validationInterval = null;
+  }
+}
+
+// Monitor DOM for footer element
+export function monitorFooterElement(): void {
+  const checkFooter = () => {
+    const footer = document.querySelector('[data-footer-protected="true"]');
+    if (!footer) {
+      console.error('Critical component missing');
+      window.location.reload();
+    }
+  };
+
+  // Check on intervals
+  setInterval(checkFooter, 60000); // Check every minute
+  
+  // Also use MutationObserver for immediate detection
+  if (typeof MutationObserver !== 'undefined') {
+    const observer = new MutationObserver(() => {
+      checkFooter();
+    });
+    
+    // Observe the body for changes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+}

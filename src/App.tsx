@@ -6,12 +6,10 @@ import Overview from './pages/org/demo/Overview'
 import Usage from './pages/org/demo/Usage'
 import Performance from './pages/org/demo/Performance'
 import Adoption from './pages/org/demo/Adoption'
-import Seats from './pages/org/demo/Seats'
 import LiveOverview from './pages/org/live/Overview'
 import LiveUsage from './pages/org/live/Usage'
 import LivePerformance from './pages/org/live/Performance'
 import LiveAdoption from './pages/org/live/Adoption'
-import LiveSeats from './pages/org/live/Seats'
 import Admin from './pages/Admin'
 import EnterpriseSeats from './pages/enterprise/live/Seats'
 import EnterpriseOverview from './pages/enterprise/live/Overview'
@@ -43,14 +41,12 @@ function App() {
           <Route path="/demo/usage" element={<Usage />} />
           <Route path="/demo/performance" element={<Performance />} />
           <Route path="/demo/adoption" element={<Adoption />} />
-          <Route path="/demo/seats" element={<Seats />} />
           
           {/* Live Routes */}
           <Route path="/live" element={<LiveOverview />} />
           <Route path="/live/usage" element={<LiveUsage />} />
           <Route path="/live/performance" element={<LivePerformance />} />
           <Route path="/live/adoption" element={<LiveAdoption />} />
-          <Route path="/live/seats" element={<LiveSeats />} />
           
           {/* Enterprise Routes */}
           <Route path="/enterprise/demo/overview" element={<EnterpriseDemoOverview />} />

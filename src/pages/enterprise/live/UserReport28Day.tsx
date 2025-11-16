@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Calendar,
   User,
@@ -16,6 +16,8 @@ import DateRangeFilter, {
   DateRangeType,
 } from "../../../components/DateRangeFilter";
 import { filterDataByDateRange } from "../../../utils/dateFilters";
+import DataSourceToggle from "../../../components/DataSourceToggle";
+import { demoUser28DayReportData } from "../../../data/demoUser28DayReport";
 
 interface UserDayRecord {
   report_start_day: string;
@@ -96,17 +98,29 @@ interface UserReportData {
 const UserReport28Day = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>("all");
   const [selectedUser, setSelectedUser] = useState<string>("all");
+  const [isDemo, setIsDemo] = useState(false);
+  const [reportData, setReportData] = useState<UserReportData | null>(null);
 
-  // Load data from localStorage
-  const reportData: UserReportData | null = useMemo(() => {
-    const data = localStorage.getItem("user_report_data");
-    if (!data) return null;
-    try {
-      return JSON.parse(data);
-    } catch {
-      return null;
+  // Load data from localStorage or demo
+  useEffect(() => {
+    if (!isDemo) {
+      const data = localStorage.getItem("user_report_data");
+      if (data) {
+        try {
+          setReportData(JSON.parse(data));
+        } catch {
+          console.error('Failed to parse user report data');
+          setReportData(null);
+        }
+      } else {
+        // Don't auto-switch to demo, just clear data to show no data message
+        setReportData(null);
+      }
+    } else {
+      setReportData(demoUser28DayReportData);
     }
-  }, []);
+  }, [isDemo]);
+
   const dateRange = {
     from: reportData?.report_start_day,
     to: reportData?.report_end_day,
@@ -325,6 +339,39 @@ const UserReport28Day = () => {
     ];
   }, [filteredData]);
 
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && !reportData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">User 28-Day Report</h1>
+            <p className="text-slate-400">Detailed user activity metrics</p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+        </div>
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no user 28-day report data available. To view user activity metrics:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Download enterprise metrics data using the "Download Data" button</li>
+            <li>Return to this page to view detailed user activity reports</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!reportData) {
     return (
       <div className="p-8">
@@ -348,23 +395,17 @@ const UserReport28Day = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-white">
-              User 28-Day Report
-            </h1>
-            <span className="px-3 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs font-semibold rounded-full flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" />
-              DEMO DATA
-            </span>
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            User 28-Day Report
+          </h1>
           <p className="text-slate-400">
             Detailed user activity metrics from {dateRange.from} to{" "}
             {dateRange.to}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
           {/* User Filter */}
-          
           <select
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
