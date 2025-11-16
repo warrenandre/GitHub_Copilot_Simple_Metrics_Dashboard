@@ -4,7 +4,9 @@ import { ResponsiveLine } from '@nivo/line'
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsivePie } from '@nivo/pie'
 import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import DataSourceToggle from '../../../components/DataSourceToggle'
 import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demo28DayReportData } from '../../../data/demo28DayReport'
 
 interface DayTotal {
   day: string
@@ -86,10 +88,19 @@ const Report28Day = () => {
   const [reportData, setReportData] = useState<Report28DayData | null>(null)
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
+  const [isDemo, setIsDemo] = useState(false)
 
   useEffect(() => {
-    loadReportData()
-  }, [])
+    if (!isDemo) {
+      loadReportData()
+    } else {
+      setReportData(demo28DayReportData)
+      setDateRange({
+        from: demo28DayReportData.report_start_day,
+        to: demo28DayReportData.report_end_day
+      })
+    }
+  }, [isDemo])
 
   const loadReportData = () => {
     try {
@@ -101,9 +112,15 @@ const Report28Day = () => {
           from: data.report_start_day,
           to: data.report_end_day
         })
+      } else {
+        // Don't auto-switch to demo, just clear data to show no data message
+        setReportData(null)
+        setDateRange({ from: '', to: '' })
       }
     } catch (error) {
       console.error('Failed to load 28-day report data:', error)
+      setReportData(null)
+      setDateRange({ from: '', to: '' })
     }
   }
 
@@ -294,6 +311,39 @@ const Report28Day = () => {
     }]
   }, [filteredData])
 
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && !reportData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Enterprise 28-Day Report</h1>
+            <p className="text-slate-400">Comprehensive analysis of Copilot usage and productivity</p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+        </div>
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no 28-day report data available. To view the enterprise 28-day report:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Download enterprise metrics data using the "Download Data" button</li>
+            <li>Return to this page to view the comprehensive 28-day report</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (!reportData) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -314,17 +364,20 @@ const Report28Day = () => {
           <p className="text-slate-400">Comprehensive analysis of Copilot usage and productivity</p>
         </div>
         <div className="flex items-center gap-3">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
           <DateRangeFilter
             selectedRange={selectedRange}
             onRangeChange={setSelectedRange}
           />
-          <button
-            onClick={loadReportData}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          {!isDemo && (
+            <button
+              onClick={loadReportData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          )}
         </div>
       </div>
 

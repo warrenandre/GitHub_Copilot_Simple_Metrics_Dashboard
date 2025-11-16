@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
-import { Lightbulb, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Lightbulb, TrendingUp, AlertCircle, CheckCircle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
 import { filterDataByDateRange } from '../../../utils/dateFilters'
+import DataSourceToggle from '../../../components/DataSourceToggle'
+import { demo28DayReportData } from '../../../data/demo28DayReport'
 
 interface DayTotal {
   day: string
@@ -49,54 +51,91 @@ const Insights = () => {
   const [metricsData, setMetricsData] = useState<MetricsData[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedInsights, setExpandedInsights] = useState<Set<number>>(new Set())
+  const [isDemo, setIsDemo] = useState(false)
 
-  useEffect(() => {
-    const loadData = () => {
-      try {
-        const jsonStr = localStorage.getItem('enterprise_report_data')
-        if (jsonStr) {
-          const data: Report28DayData = JSON.parse(jsonStr)
+  const loadData = () => {
+    try {
+      const jsonStr = localStorage.getItem('enterprise_report_data')
+      if (jsonStr) {
+        const data: Report28DayData = JSON.parse(jsonStr)
+        
+        // Transform 28-day report data to metrics format
+        const transformed: MetricsData[] = data.day_totals.map((day) => {
+          // Calculate chat users from totals_by_feature
+          const chatUsers = day.totals_by_feature
+            .filter(f => f.feature === 'copilot_chat')
+            .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
           
-          // Transform 28-day report data to metrics format
-          const transformed: MetricsData[] = data.day_totals.map((day) => {
-            // Calculate chat users from totals_by_feature
-            const chatUsers = day.totals_by_feature
-              .filter(f => f.feature === 'copilot_chat')
-              .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
-            
-            // Calculate code completion users from totals_by_feature
-            const codeUsers = day.totals_by_feature
-              .filter(f => f.feature === 'code_completion')
-              .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
-            
-            // Users who had any activity are considered engaged
-            const engagedUsers = day.user_initiated_interaction_count > 0 
-              ? day.daily_active_users 
-              : 0
-            
-            return {
-              date: day.day,
-              total_active_users: day.daily_active_users,
-              total_engaged_users: engagedUsers,
-              code_completions_users: codeUsers,
-              chat_users: chatUsers,
-              user_interactions: day.user_initiated_interaction_count,
-              code_generations: day.code_generation_activity_count,
-              code_acceptances: day.code_acceptance_activity_count
-            }
-          })
+          // Calculate code completion users from totals_by_feature
+          const codeUsers = day.totals_by_feature
+            .filter(f => f.feature === 'code_completion')
+            .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
           
-          setMetricsData(transformed)
-        }
-      } catch (error) {
-        console.error('Failed to load report data:', error)
-      } finally {
+          // Users who had any activity are considered engaged
+          const engagedUsers = day.user_initiated_interaction_count > 0 
+            ? day.daily_active_users 
+            : 0
+          
+          return {
+            date: day.day,
+            total_active_users: day.daily_active_users,
+            total_engaged_users: engagedUsers,
+            code_completions_users: codeUsers,
+            chat_users: chatUsers,
+            user_interactions: day.user_initiated_interaction_count,
+            code_generations: day.code_generation_activity_count,
+            code_acceptances: day.code_acceptance_activity_count
+          }
+        })
+        
+        setMetricsData(transformed)
+        setLoading(false)
+      } else {
+        // Don't auto-switch to demo, just clear data to show no data message
+        setMetricsData([])
         setLoading(false)
       }
+    } catch (err) {
+      console.error('Error loading data:', err)
+      setMetricsData([])
+      setLoading(false)
     }
+  }
 
-    loadData()
-  }, [])
+  useEffect(() => {
+    if (!isDemo) {
+      loadData()
+    } else {
+      // Transform demo data to metrics format
+      const transformed: MetricsData[] = demo28DayReportData.day_totals.map((day) => {
+        const chatUsers = day.totals_by_feature
+          .filter(f => f.feature === 'copilot_chat')
+          .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
+        
+        const codeUsers = day.totals_by_feature
+          .filter(f => f.feature === 'code_completion')
+          .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0)
+        
+        const engagedUsers = day.user_initiated_interaction_count > 0 
+          ? day.daily_active_users 
+          : 0
+        
+        return {
+          date: day.day,
+          total_active_users: day.daily_active_users,
+          total_engaged_users: engagedUsers,
+          code_completions_users: codeUsers,
+          chat_users: chatUsers,
+          user_interactions: day.user_initiated_interaction_count,
+          code_generations: day.code_generation_activity_count,
+          code_acceptances: day.code_acceptance_activity_count
+        }
+      })
+      
+      setMetricsData(transformed)
+      setLoading(false)
+    }
+  }, [isDemo])
 
   const filteredData = useMemo(() => {
     return filterDataByDateRange(metricsData, selectedRange)
@@ -356,21 +395,40 @@ const Insights = () => {
     )
   }
 
-  if (metricsData.length === 0) {
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && metricsData.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-12 border border-slate-700 text-center">
-        <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">No Metrics Data Available</h2>
-        <p className="text-slate-400 mb-6">
-          Download enterprise metrics from the Admin Settings page to view actionable insights.
-        </p>
-        <a
-          href="/admin"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-        >
-          <Lightbulb className="w-5 h-5" />
-          Go to Admin Settings
-        </a>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <Lightbulb className="w-8 h-8 text-purple-400" />
+              Actionable Insights
+            </h1>
+            <p className="text-slate-400 mt-2">
+              AI-powered analysis and recommendations based on GitHub best practices
+            </p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+        </div>
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no live data available. To view actionable insights:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Download enterprise metrics data using the "Download Data" button</li>
+            <li>Return to this page to view AI-powered insights</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
+        </div>
       </div>
     )
   }
@@ -378,18 +436,30 @@ const Insights = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Lightbulb className="w-8 h-8 text-purple-400" />
-          Actionable Insights
-        </h1>
-        <p className="text-slate-400 mt-2">
-          AI-powered analysis and recommendations based on GitHub best practices
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <Lightbulb className="w-8 h-8 text-purple-400" />
+            Actionable Insights
+          </h1>
+          <p className="text-slate-400 mt-2">
+            AI-powered analysis and recommendations based on GitHub best practices
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+          <DateRangeFilter selectedRange={selectedRange} onRangeChange={setSelectedRange} />
+          {!isDemo && (
+            <button
+              onClick={loadData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          )}
+        </div>
       </div>
-
-      {/* Date Range Filter */}
-      <DateRangeFilter selectedRange={selectedRange} onRangeChange={setSelectedRange} />
 
       {/* Insights Grid */}
       <div className="space-y-4">

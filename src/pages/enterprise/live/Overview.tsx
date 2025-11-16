@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { Users, Activity, MessageSquare, Code, TrendingUp, Calendar, RefreshCw } from 'lucide-react'
 import { ResponsiveLine } from '@nivo/line'
 import DateRangeFilter, { DateRangeType } from '../../../components/DateRangeFilter'
+import DataSourceToggle from '../../../components/DataSourceToggle'
 import { filterDataByDateRange } from '../../../utils/dateFilters'
+import { demoEnterpriseMetrics } from '../../../data/demoEnterpriseData'
 
 interface MetricsData {
   date: string
@@ -34,6 +36,7 @@ const EnterpriseOverview = () => {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
+  const [isDemo, setIsDemo] = useState(false)
 
   const loadMetricsData = () => {
     setLoading(true)
@@ -56,19 +59,32 @@ const EnterpriseOverview = () => {
           })
         }
       } else {
-        setError('No enterprise metrics data available')
+        // Don't auto-switch to demo, just clear data to show no data message
+        setMetricsData([])
       }
     } catch (err) {
-      setError('Failed to load enterprise metrics data')
       console.error('Error loading metrics data:', err)
+      setMetricsData([])
+      setError('Failed to load metrics data')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadMetricsData()
-  }, [])
+    if (!isDemo) {
+      loadMetricsData()
+    } else {
+      // Use demo data
+      setMetricsData(demoEnterpriseMetrics)
+      setDateRange({
+        from: demoEnterpriseMetrics[0]?.date || '',
+        to: demoEnterpriseMetrics[demoEnterpriseMetrics.length - 1]?.date || ''
+      })
+      setLoading(false)
+      setError(null)
+    }
+  }, [isDemo])
 
   // Filter data based on selected date range
   const filteredData = useMemo(() => {
@@ -86,18 +102,33 @@ const EnterpriseOverview = () => {
     )
   }
 
-  if (error || metricsData.length === 0) {
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && (error || metricsData.length === 0)) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Enterprise Overview</h1>
-          <p className="text-slate-400">Enterprise-wide GitHub Copilot metrics and insights</p>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Enterprise Overview</h1>
+            <p className="text-slate-400">Enterprise-wide GitHub Copilot metrics and insights</p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
         </div>
-        <div className="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
-          <Activity className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Enterprise Data Available</h3>
-          <p className="text-slate-400 mb-4">
-            Please download enterprise metrics data from the Admin Settings page.
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no live data available. To view live enterprise metrics:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Download enterprise metrics data using the "Download Data" button</li>
+            <li>Return to this page to view your live metrics</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
           </p>
         </div>
       </div>
@@ -165,17 +196,20 @@ const EnterpriseOverview = () => {
           <p className="text-slate-400">Enterprise-wide GitHub Copilot metrics and insights</p>
         </div>
         <div className="flex items-center gap-3">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
           <DateRangeFilter
             selectedRange={selectedRange}
             onRangeChange={setSelectedRange}
           />
-          <button
-            onClick={loadMetricsData}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          {!isDemo && (
+            <button
+              onClick={loadMetricsData}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          )}
         </div>
       </div>
 

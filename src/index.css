@@ -41,3 +41,28 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Protected footer - prevent tampering */
+[data-footer-protected="true"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+[data-footer-protected="true"] * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Prevent hiding the footer with CSS */
+[data-footer-protected="true"]:not(:has(*)) {
+  min-height: 60px;
+}

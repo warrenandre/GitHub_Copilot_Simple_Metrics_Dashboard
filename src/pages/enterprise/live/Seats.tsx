@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Users, UserCheck, Calendar, Activity, GitBranch, Building, RefreshCw, Download } from 'lucide-react'
+import DataSourceToggle from '../../../components/DataSourceToggle'
+import { demoSeatsData } from '../../../data/demoSeatsData'
 
 interface SeatData {
   assignee: {
@@ -29,6 +31,7 @@ const EnterpriseSeats = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
 
   const loadSeatsData = () => {
     setLoading(true)
@@ -50,19 +53,29 @@ const EnterpriseSeats = () => {
         }
         setLastUpdated(timestamp)
       } else {
-        setError('No enterprise seats data available')
+        // Don't auto-switch to demo, just clear data to show no data message
+        setSeatsData(null)
+        setLastUpdated(null)
       }
     } catch (err) {
-      setError('Failed to load enterprise seats data')
       console.error('Error loading seats data:', err)
+      setSeatsData(null)
+      setError('Failed to load seats data')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadSeatsData()
-  }, [])
+    if (!isDemo) {
+      loadSeatsData()
+    } else {
+      setSeatsData(demoSeatsData)
+      setLastUpdated(new Date().toLocaleString())
+      setLoading(false)
+      setError(null)
+    }
+  }, [isDemo])
 
   const handleRefresh = () => {
     loadSeatsData()
@@ -94,34 +107,41 @@ const EnterpriseSeats = () => {
     )
   }
 
-  if (error || !seatsData) {
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && (error || !seatsData)) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Enterprise Copilot Seats</h1>
             <p className="text-slate-400">Manage and monitor GitHub Copilot seat assignments for your enterprise</p>
           </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
         </div>
-
-        <div className="bg-slate-800 rounded-lg p-8 text-center border border-slate-700">
-          <Building className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No Enterprise Seats Data Available</h3>
-          <p className="text-slate-400 mb-4">
-            Enterprise seats data has not been downloaded yet. Please download the data from the Admin Settings page.
+        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 flex items-center gap-2">
+            <Building className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 mb-4">
+            There is currently no live seats data available. To view enterprise seat assignments:
           </p>
-          <div className="bg-slate-900 rounded-lg p-4 text-left max-w-2xl mx-auto">
-            <p className="text-sm text-slate-300 font-semibold mb-2">To download enterprise seats data:</p>
-            <ol className="text-sm text-slate-400 space-y-1 list-decimal list-inside">
-              <li>Navigate to Admin Settings</li>
-              <li>Configure your GitHub Enterprise settings and Personal Access Token</li>
-              <li>Click "Download Enterprise Seats" button</li>
-              <li>Return to this page to view the data</li>
-            </ol>
-          </div>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Enterprise access token</li>
+            <li>Click the "Download Enterprise Seats" button</li>
+            <li>Return to this page to view seat assignment data</li>
+          </ol>
+          <p className="text-yellow-100/80">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
         </div>
       </div>
     )
+  }
+
+  if (!seatsData) {
+    return <div className="p-6 text-slate-400">Loading seats data...</div>
   }
 
   const activeSeats = seatsData.seats.filter(seat => !seat.pending_cancellation_date).length
@@ -146,13 +166,16 @@ const EnterpriseSeats = () => {
           <p className="text-slate-400">Manage and monitor GitHub Copilot seat assignments for your enterprise</p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+          {!isDemo && (
+            <button
+              onClick={handleRefresh}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          )}
           <button
             onClick={handleDownload}
             className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"

@@ -68,7 +68,7 @@ Explore the full dashboard with sample data - no GitHub token required! The demo
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/warrenandre/GitHub_Copilot_Simple_Metrics_Dashboard.git
 cd GHCPDashboardApp
 ```
 
@@ -326,6 +326,31 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License - feel free to use this project for your own purposes.
+
+## ⚠️ Usage Terms
+
+**You are free to use, modify, and distribute this repository** under the MIT License, with the following requirement:
+
+**The application footer containing developer attribution ("Developed by Warren Joubert - Microsoft Software Engineer") must remain intact and unmodified.**
+
+This footer is protected by multiple validation systems:
+- Cryptographic validation on application startup
+- Real-time DOM monitoring and integrity checks
+- Automatic application reload if footer is removed or modified
+- CSS-based protection against tampering
+
+**What you can do:**
+- ✅ Use this code for personal or commercial projects
+- ✅ Modify any functionality, styling, or features
+- ✅ Deploy to your own infrastructure
+- ✅ Fork and create derivative works
+
+**What you cannot do:**
+- ❌ Remove or modify the footer attribution
+- ❌ Disable the footer protection mechanisms
+- ❌ Claim authorship of the original work
+
+The footer serves as attribution for the original development work while allowing full usage of the codebase. If you have specific requirements that conflict with this, please open an issue to discuss.
 
 ## Acknowledgments
 

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Users, UserPlus, Percent, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react'
+import { Users, UserPlus, Percent, TrendingUp, RefreshCw } from 'lucide-react'
 import MetricCard from '../../../components/MetricCard'
 import LineChart from '../../../components/LineChart'
 import PieChart from '../../../components/PieChart'
 import BarChart from '../../../components/BarChart'
 import DateRangeSelector, { DateRange } from '../../../components/DateRangeSelector'
+import DataSourceToggle from '../../../components/DataSourceToggle'
 import { githubApiService } from '../../../services/githubApi'
+import { metricsService } from '../../../services/api'
 import { transformGitHubData } from '../../../services/dataTransform'
 import { CopilotMetricsResponse, LineChartData, ChartData } from '../../../types/metrics'
 
@@ -14,6 +16,7 @@ const LiveAdoption = () => {
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [dateRange, setDateRange] = useState<DateRange>('daily')
+  const [isDemo, setIsDemo] = useState(false)
 
   const getDaysToShow = () => {
     switch (dateRange) {
@@ -26,13 +29,20 @@ const LiveAdoption = () => {
   const loadMetrics = async () => {
     setLoading(true)
     try {
-      const githubData = await githubApiService.loadData()
-      if (githubData && githubData.length > 0) {
-        const transformed = transformGitHubData(githubData)
-        setMetrics(transformed)
-        setLastRefresh(new Date(githubApiService.getLastSavedTimestamp() || new Date()))
+      if (!isDemo) {
+        const githubData = await githubApiService.loadData()
+        if (githubData && githubData.length > 0) {
+          const transformed = transformGitHubData(githubData)
+          setMetrics(transformed)
+          setLastRefresh(new Date(githubApiService.getLastSavedTimestamp() || new Date()))
+        } else {
+          // No live data available, don't auto-switch to demo
+          setMetrics(null)
+        }
       } else {
-        setMetrics(null)
+        const demoData = await metricsService.fetchMetrics('demo-org')
+        setMetrics(demoData)
+        setLastRefresh(new Date())
       }
     } catch (error) {
       console.error('Failed to load metrics:', error)
@@ -44,16 +54,55 @@ const LiveAdoption = () => {
 
   useEffect(() => {
     loadMetrics()
-    const interval = setInterval(loadMetrics, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+  }, [isDemo])
+
+  useEffect(() => {
+    if (!isDemo) {
+      const interval = setInterval(loadMetrics, 5 * 60 * 1000)
+      return () => clearInterval(interval)
+    }
+  }, [isDemo])
 
   if (loading && !metrics) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-white dark:text-white light:text-gray-900 text-xl flex items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin" />
-          Loading live metrics...
+          Loading metrics...
+        </div>
+      </div>
+    )
+  }
+
+  // Show no data message when live mode is selected but no data is available
+  if (!isDemo && (!metrics || !metrics.data || metrics.data.length === 0)) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900 mb-2">Adoption Metrics</h1>
+            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">Live adoption data from GitHub Copilot API</p>
+          </div>
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
+        </div>
+        <div className="bg-yellow-900/20 dark:bg-yellow-900/20 light:bg-yellow-50 border border-yellow-700/50 dark:border-yellow-700/50 light:border-yellow-300 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-200 dark:text-yellow-200 light:text-yellow-800 mb-3 flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            No Live Data Available
+          </h3>
+          <p className="text-yellow-100/80 dark:text-yellow-100/80 light:text-yellow-900 mb-4">
+            There is currently no live data available from the GitHub Copilot API. To view live adoption metrics:
+          </p>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-100/80 dark:text-yellow-100/80 light:text-yellow-900 mb-4 ml-2">
+            <li>Go to the <strong>Admin Settings</strong> page</li>
+            <li>Configure your GitHub Personal Access Token (PAT) with <code className="px-1 py-0.5 bg-yellow-950/30 dark:bg-yellow-950/30 light:bg-yellow-200 rounded text-sm">copilot</code> scope</li>
+            <li>Enter your organization name</li>
+            <li>Click "Save Settings" and then "Fetch Data"</li>
+            <li>Wait for the data to be retrieved (this may take a few moments)</li>
+          </ol>
+          <p className="text-yellow-100/80 dark:text-yellow-100/80 light:text-yellow-900">
+            In the meantime, switch to <strong>Demo</strong> mode using the toggle above to explore the dashboard with sample data.
+          </p>
         </div>
       </div>
     )
@@ -62,22 +111,9 @@ const LiveAdoption = () => {
   if (!metrics || !metrics.data || metrics.data.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 rounded-lg p-6 max-w-md">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-yellow-400 mt-1" />
-            <div>
-              <h3 className="text-lg font-semibold text-yellow-400 mb-2">No Data Available</h3>
-              <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700 mb-3">
-                Please download metrics data from the Admin page first.
-              </p>
-              <a
-                href="/admin"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors text-sm font-medium"
-              >
-                Go to Admin Settings
-              </a>
-            </div>
-          </div>
+        <div className="text-white dark:text-white light:text-gray-900 text-xl flex items-center gap-3">
+          <RefreshCw className="w-6 h-6 animate-spin" />
+          Loading demo data...
         </div>
       </div>
     )
@@ -137,18 +173,21 @@ const LiveAdoption = () => {
           <p className="text-slate-400 dark:text-slate-400 light:text-gray-600">Real-time user engagement and adoption patterns</p>
         </div>
         <div className="flex items-center gap-4">
+          <DataSourceToggle isDemo={isDemo} onToggle={setIsDemo} />
           <DateRangeSelector
             selectedRange={dateRange}
             onRangeChange={setDateRange}
           />
-          <button
-            onClick={loadMetrics}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 light:bg-gray-200 hover:bg-slate-600 dark:hover:bg-slate-600 light:hover:bg-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          {!isDemo && (
+            <button
+              onClick={loadMetrics}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 light:bg-gray-200 hover:bg-slate-600 dark:hover:bg-slate-600 light:hover:bg-gray-300 text-white dark:text-white light:text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          )}
         </div>
       </div>
 
@@ -156,6 +195,7 @@ const LiveAdoption = () => {
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-700">
           <span className="font-semibold text-white dark:text-white light:text-gray-900">Last updated:</span>{' '}
           {lastRefresh.toLocaleString()} • Showing {getDaysToShow()} days of data
+          {!isDemo && ' • Auto-refreshes every 5 minutes'}
         </p>
       </div>
 
