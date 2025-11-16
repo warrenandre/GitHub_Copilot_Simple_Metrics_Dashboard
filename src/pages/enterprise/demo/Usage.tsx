@@ -20,14 +20,51 @@ const DemoUsage = () => {
     return filterDataByDateRange(metricsData, selectedRange)
   }, [selectedRange])
 
-  // Calculate code completion statistics (simulated from demo data)
+  // Calculate code completion statistics from actual demo data
   const codeStats = useMemo(() => {
-    const totalSuggestions = filteredData.reduce((sum, day) => 
-      sum + (day.copilot_ide_code_completions?.total_engaged_users || 0) * 150, 0
-    )
-    const totalAcceptances = Math.round(totalSuggestions * 0.28) // 28% acceptance rate
-    const totalLinesSuggested = totalSuggestions * 8
-    const totalLinesAccepted = totalAcceptances * 8
+    const totalSuggestions = filteredData.reduce((sum, day) => {
+      const suggestions = day.copilot_ide_code_completions?.editors?.reduce((editorSum, editor) => {
+        return editorSum + (editor.models?.reduce((modelSum, model) => {
+          return modelSum + (model.languages?.reduce((langSum, lang) => {
+            return langSum + (lang.total_code_suggestions || 0)
+          }, 0) || 0)
+        }, 0) || 0)
+      }, 0) || 0
+      return sum + suggestions
+    }, 0)
+    
+    const totalAcceptances = filteredData.reduce((sum, day) => {
+      const acceptances = day.copilot_ide_code_completions?.editors?.reduce((editorSum, editor) => {
+        return editorSum + (editor.models?.reduce((modelSum, model) => {
+          return modelSum + (model.languages?.reduce((langSum, lang) => {
+            return langSum + (lang.total_code_acceptances || 0)
+          }, 0) || 0)
+        }, 0) || 0)
+      }, 0) || 0
+      return sum + acceptances
+    }, 0)
+    
+    const totalLinesSuggested = filteredData.reduce((sum, day) => {
+      const lines = day.copilot_ide_code_completions?.editors?.reduce((editorSum, editor) => {
+        return editorSum + (editor.models?.reduce((modelSum, model) => {
+          return modelSum + (model.languages?.reduce((langSum, lang) => {
+            return langSum + (lang.total_code_lines_suggested || 0)
+          }, 0) || 0)
+        }, 0) || 0)
+      }, 0) || 0
+      return sum + lines
+    }, 0)
+    
+    const totalLinesAccepted = filteredData.reduce((sum, day) => {
+      const lines = day.copilot_ide_code_completions?.editors?.reduce((editorSum, editor) => {
+        return editorSum + (editor.models?.reduce((modelSum, model) => {
+          return modelSum + (model.languages?.reduce((langSum, lang) => {
+            return langSum + (lang.total_code_lines_accepted || 0)
+          }, 0) || 0)
+        }, 0) || 0)
+      }, 0) || 0
+      return sum + lines
+    }, 0)
 
     return {
       totalSuggestions,
@@ -37,47 +74,92 @@ const DemoUsage = () => {
     }
   }, [filteredData])
 
-  // Calculate chat statistics (simulated from demo data)
+  // Calculate chat statistics from actual demo data
   const chatStats = useMemo(() => {
-    const totalChats = filteredData.reduce((sum, day) => 
-      sum + (day.copilot_ide_chat?.total_engaged_users || 0) * 12, 0
-    )
+    const totalChats = filteredData.reduce((sum, day) => {
+      const chats = day.copilot_ide_chat?.editors?.reduce((editorSum, editor) => {
+        return editorSum + editor.models.reduce((modelSum, model) => modelSum + (model.total_chats || 0), 0)
+      }, 0) || 0
+      return sum + chats
+    }, 0)
+    
+    const totalCopyEvents = filteredData.reduce((sum, day) => {
+      const copies = day.copilot_ide_chat?.editors?.reduce((editorSum, editor) => {
+        return editorSum + editor.models.reduce((modelSum, model) => modelSum + (model.total_chat_copy_events || 0), 0)
+      }, 0) || 0
+      return sum + copies
+    }, 0)
+    
+    const totalInsertionEvents = filteredData.reduce((sum, day) => {
+      const insertions = day.copilot_ide_chat?.editors?.reduce((editorSum, editor) => {
+        return editorSum + editor.models.reduce((modelSum, model) => modelSum + (model.total_chat_insertion_events || 0), 0)
+      }, 0) || 0
+      return sum + insertions
+    }, 0)
+    
     return {
       totalChats,
-      totalCopyEvents: Math.round(totalChats * 0.35),
-      totalInsertionEvents: Math.round(totalChats * 0.42)
+      totalCopyEvents,
+      totalInsertionEvents
     }
   }, [filteredData])
 
-  // Language usage data (simulated)
+  // Language usage data from actual demo data
   const languageChartData = useMemo(() => {
-    const languages = [
-      { id: 'JavaScript', label: 'JavaScript', value: 3245, color: 'hsl(60, 70%, 50%)' },
-      { id: 'Python', label: 'Python', value: 2876, color: 'hsl(210, 70%, 50%)' },
-      { id: 'TypeScript', label: 'TypeScript', value: 2543, color: 'hsl(200, 70%, 50%)' },
-      { id: 'Java', label: 'Java', value: 1987, color: 'hsl(15, 70%, 50%)' },
-      { id: 'C#', label: 'C#', value: 1654, color: 'hsl(270, 70%, 50%)' },
-      { id: 'Go', label: 'Go', value: 1432, color: 'hsl(180, 70%, 50%)' },
-      { id: 'Ruby', label: 'Ruby', value: 1123, color: 'hsl(350, 70%, 50%)' },
-      { id: 'PHP', label: 'PHP', value: 987, color: 'hsl(240, 70%, 50%)' },
-      { id: 'C++', label: 'C++', value: 876, color: 'hsl(30, 70%, 50%)' },
-      { id: 'Rust', label: 'Rust', value: 654, color: 'hsl(20, 70%, 50%)' }
-    ]
+    // Aggregate language data across all filtered days
+    const languageMap = new Map<string, { suggestions: number, acceptances: number, users: number }>()
     
-    // Scale based on filtered data
-    const scale = filteredData.length / metricsData.length
-    return languages.map(lang => ({
-      ...lang,
-      value: Math.round(lang.value * scale)
-    }))
-  }, [filteredData, metricsData.length])
+    filteredData.forEach(day => {
+      day.copilot_ide_code_completions?.editors?.forEach(editor => {
+        editor.models?.forEach(model => {
+          model.languages?.forEach(lang => {
+            const existing = languageMap.get(lang.name) || { suggestions: 0, acceptances: 0, users: 0 }
+            languageMap.set(lang.name, {
+              suggestions: existing.suggestions + (lang.total_code_suggestions || 0),
+              acceptances: existing.acceptances + (lang.total_code_acceptances || 0),
+              users: Math.max(existing.users, lang.total_engaged_users || 0)
+            })
+          })
+        })
+      })
+    })
+    
+    // Convert to chart format
+    const colorMap: Record<string, string> = {
+      'JavaScript': 'hsl(60, 70%, 50%)',
+      'Python': 'hsl(210, 70%, 50%)',
+      'TypeScript': 'hsl(200, 70%, 50%)',
+      'Java': 'hsl(15, 70%, 50%)',
+      'C#': 'hsl(270, 70%, 50%)',
+      'Go': 'hsl(180, 70%, 50%)',
+      'Ruby': 'hsl(350, 70%, 50%)',
+      'PHP': 'hsl(240, 70%, 50%)',
+      'C++': 'hsl(30, 70%, 50%)',
+      'Rust': 'hsl(20, 70%, 50%)'
+    }
+    
+    return Array.from(languageMap.entries()).map(([name, data]) => ({
+      id: name,
+      label: name,
+      value: data.suggestions,
+      color: colorMap[name] || 'hsl(0, 70%, 50%)'
+    })).sort((a, b) => b.value - a.value)
+  }, [filteredData])
 
-  // Daily usage trend data (for bar chart)
+  // Daily usage trend data from actual metrics
   const dailyUsageData = useMemo(() => {
     return filteredData.map(day => ({
       date: day.date.substring(5), // Show only MM-DD
-      'Code Suggestions': (day.copilot_ide_code_completions?.total_engaged_users || 0) * 150,
-      'Chat Sessions': (day.copilot_ide_chat?.total_engaged_users || 0) * 12
+      'Code Suggestions': day.copilot_ide_code_completions?.editors?.reduce((sum, editor) => {
+        return sum + (editor.models?.reduce((modelSum, model) => {
+          return modelSum + (model.languages?.reduce((langSum, lang) => {
+            return langSum + (lang.total_code_suggestions || 0)
+          }, 0) || 0)
+        }, 0) || 0)
+      }, 0) || 0,
+      'Chat Sessions': day.copilot_ide_chat?.editors?.reduce((sum, editor) => 
+        sum + (editor.models?.reduce((modelSum, model) => modelSum + (model.total_chats || 0), 0) || 0), 0
+      ) || 0
     }))
   }, [filteredData])
 
