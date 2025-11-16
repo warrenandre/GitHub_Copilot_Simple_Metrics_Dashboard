@@ -37,10 +37,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
   const [appReady, setAppReady] = useState(true)
   
-  // Feature flag for showing demo links (default: true for development)
+  // Feature flag for showing demo links (default: false for production)
   const [showDemoLinks, setShowDemoLinks] = useState(() => {
     const saved = localStorage.getItem('showDemoLinks')
-    return saved !== null ? saved === 'true' : true
+    return saved !== null ? saved === 'true' : false
   })
 
   // Persist feature flag to localStorage
