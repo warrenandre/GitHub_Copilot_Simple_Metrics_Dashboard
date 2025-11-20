@@ -23,6 +23,7 @@ const Admin = () => {
   const [user28DayReportResult, setUser28DayReportResult] = useState<DownloadResult | null>(null)
   const [orgMetricsResult, setOrgMetricsResult] = useState<DownloadResult | null>(null)
   const [orgSeatsResult, setOrgSeatsResult] = useState<DownloadResult | null>(null)
+  const [prMetricsResult, setPrMetricsResult] = useState<DownloadResult | null>(null)
   const [dataStats, setDataStats] = useState<ReturnType<typeof githubApiService.getDataStats>>(null)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
@@ -321,9 +322,87 @@ const Admin = () => {
     }
   }
 
+  const handleDownloadPRMetrics = async () => {
+    // Validate configuration
+    const validation = validateApiConfig(config)
+    if (!validation.valid) {
+      setValidationErrors(validation.errors)
+      setPrMetricsResult({
+        success: false,
+        message: 'Please fix validation errors before proceeding',
+      })
+      return
+    }
+
+    setLoading(true)
+    setPrMetricsResult(null)
+    setValidationErrors([])
+
+    try {
+      // Fetch enterprise metrics which includes PR data
+      const data = await githubApiService.fetchFromGitHub(config, 'enterprise')
+      
+      if (!data || data.length === 0) {
+        setPrMetricsResult({
+          success: false,
+          message: 'No data returned from GitHub API',
+        })
+        setLoading(false)
+        return
+      }
+
+      // Extract PR metrics data
+      const prData = data.map(day => ({
+        date: day.date,
+        total_active_users: day.total_active_users,
+        total_engaged_users: day.total_engaged_users,
+        copilot_dotcom_pull_requests: day.copilot_dotcom_pull_requests
+      })).filter(day => day.copilot_dotcom_pull_requests)
+
+      // Calculate stats
+      const totalPRDays = prData.length
+      const totalPRUsers = prData.reduce((max, day) => 
+        Math.max(max, day.copilot_dotcom_pull_requests?.total_engaged_users || 0), 0
+      )
+
+      // Save to localStorage with a specific key for PR metrics
+      const prStorageKey = 'copilot_pr_metrics_data'
+      localStorage.setItem(prStorageKey, JSON.stringify(prData))
+      localStorage.setItem(`${prStorageKey}_timestamp`, new Date().toISOString())
+
+      // Also save to the main enterprise metrics storage (for compatibility)
+      githubApiService.saveToLocalStorage(data, 'enterprise')
+      saveApiConfig(config)
+
+      setPrMetricsResult({
+        success: true,
+        message: 'PR metrics data downloaded and saved successfully',
+        recordCount: totalPRDays,
+        dateRange: {
+          from: prData[0]?.date || 'unknown',
+          to: prData[prData.length - 1]?.date || 'unknown',
+        }
+      })
+
+      updateDataStats()
+    } catch (error) {
+      console.error('PR metrics download error:', error)
+      setPrMetricsResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : String(error),
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleClearData = () => {
     if (confirm('Are you sure you want to clear all saved metrics data?')) {
       githubApiService.clearLocalStorage()
+      // Also clear PR metrics
+      localStorage.removeItem('copilot_pr_metrics_data')
+      localStorage.removeItem('copilot_pr_metrics_data_timestamp')
       updateDataStats()
       setEnterpriseMetricsResult({
         success: true,
@@ -334,6 +413,7 @@ const Admin = () => {
       setUser28DayReportResult(null)
       setOrgMetricsResult(null)
       setOrgSeatsResult(null)
+      setPrMetricsResult(null)
     }
   }
 
@@ -543,11 +623,21 @@ const Admin = () => {
             <Save className="w-5 h-5" />
             {loading ? 'Downloading...' : 'Download Seats'}
           </button>
+
+          <button
+            onClick={handleDownloadPRMetrics}
+            disabled={isDemoMode || loading || !config.org || !config.token}
+            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+          >
+            <Save className="w-5 h-5" />
+            {loading ? 'Downloading...' : 'Download PR Metrics'}
+          </button>
         </div>
 
         <div className="mt-4 text-sm text-slate-400">
           <p><strong>Download Metrics:</strong> Fetches enterprise-level Copilot usage metrics and performance data</p>
           <p className="mt-1"><strong>Download Seats:</strong> Fetches individual seat-level data including per-user usage and productivity stats</p>
+          <p className="mt-1"><strong>Download PR Metrics:</strong> Fetches PR review engagement metrics from the Copilot API for visualization on the PR Reviews page</p>
         </div>
       </div>
 
@@ -739,6 +829,44 @@ const Admin = () => {
               )}
               {enterpriseSeatsResult.error && (
                 <p className="text-xs text-slate-400 mt-2 font-mono">{enterpriseSeatsResult.error}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PR Metrics Result Message */}
+      {prMetricsResult && (
+        <div className={`rounded-lg p-4 border ${
+          prMetricsResult.success
+            ? 'bg-green-500 bg-opacity-10 border-green-500'
+            : 'bg-red-500 bg-opacity-10 border-red-500'
+        }`}>
+          <div className="flex items-start gap-3">
+            {prMetricsResult.success ? (
+              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <h3 className={`text-sm font-semibold mb-1 ${
+                prMetricsResult.success ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {prMetricsResult.success ? 'PR Metrics Success' : 'PR Metrics Error'}
+              </h3>
+              <p className="text-sm text-slate-300">{prMetricsResult.message}</p>
+              {prMetricsResult.recordCount && (
+                <p className="text-sm text-slate-300 mt-1">
+                  Days with PR data: <strong>{prMetricsResult.recordCount}</strong>
+                </p>
+              )}
+              {prMetricsResult.dateRange && (
+                <p className="text-sm text-slate-300">
+                  Date range: <strong>{prMetricsResult.dateRange.from}</strong> to <strong>{prMetricsResult.dateRange.to}</strong>
+                </p>
+              )}
+              {prMetricsResult.error && (
+                <p className="text-xs text-slate-400 mt-2 font-mono">{prMetricsResult.error}</p>
               )}
             </div>
           </div>

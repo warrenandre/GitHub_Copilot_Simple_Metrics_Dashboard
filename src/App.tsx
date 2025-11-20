@@ -27,6 +27,8 @@ import EnterpriseDemoAdoption from './pages/enterprise/demo/Adoption'
 import EnterpriseDemoReport28Day from './pages/enterprise/demo/Report28Day'
 import EnterpriseDemoUserReport28Day from './pages/enterprise/demo/UserReport28Day'
 import EnterpriseDemoInsights from './pages/enterprise/demo/Insights'
+import EnterpriseDemoPullRequestReviews from './pages/enterprise/demo/PullRequestReviews'
+import EnterprisePullRequestReviews from './pages/enterprise/live/PullRequestReviews'
 
 function App() {
   return (
@@ -57,6 +59,7 @@ function App() {
           <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
           <Route path="/enterprise/demo/report" element={<EnterpriseDemoReport28Day />} />
           <Route path="/enterprise/demo/user-report" element={<EnterpriseDemoUserReport28Day />} />
+          <Route path="/enterprise/demo/pr-reviews" element={<EnterpriseDemoPullRequestReviews />} />
           <Route path="/enterprise/overview" element={<EnterpriseOverview />} />
           <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
           <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
@@ -65,6 +68,7 @@ function App() {
           <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
           <Route path="/enterprise/report" element={<EnterpriseReport28Day />} />
           <Route path="/enterprise/user-report" element={<EnterpriseUserReport28Day />} />
+          <Route path="/enterprise/pr-reviews" element={<EnterprisePullRequestReviews />} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />
