@@ -19,6 +19,9 @@ import {
   FileBarChart,
   Lightbulb,
   User,
+  FolderGit2,
+  GitPullRequest,
+  GitCompare,
 } from 'lucide-react'
 import { initAppMetadata, checkSystemState, startPeriodicValidation, monitorFooterElement } from '../utils/integrity'
 import { useFooterProtection } from '../hooks/useFooterProtection'
@@ -34,6 +37,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [demoExpanded, setDemoExpanded] = useState(false)
   const [enterpriseExpanded, setEnterpriseExpanded] = useState(false)
   const [enterpriseDemoExpanded, setEnterpriseDemoExpanded] = useState(false)
+  const [repoMetricsExpanded, setRepoMetricsExpanded] = useState(false)
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
   const [appReady, setAppReady] = useState(true)
   
@@ -471,6 +475,54 @@ const Layout = ({ children }: LayoutProps) => {
               )}
             </div>
 
+            {/* Repo Metrics Section */}
+            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
+              <button
+                onClick={() => setRepoMetricsExpanded(!repoMetricsExpanded)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100"
+              >
+                <div className="flex items-center gap-3">
+                  <GitPullRequest className="w-5 h-5 text-slate-400 dark:text-slate-400 light:text-gray-600" />
+                  <span className="font-semibold text-sm uppercase tracking-wider">Repo Metrics</span>
+                </div>
+                {repoMetricsExpanded ? (
+                  <ChevronDown className="w-5 h-5 text-slate-400" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                )}
+              </button>
+
+              {repoMetricsExpanded && (
+                <div className="mt-2 space-y-1">
+                  <Link
+                    to="/repo-metrics"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/repo-metrics'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <GitPullRequest className="w-5 h-5" />
+                    <span className="font-medium text-sm">Pull Requests</span>
+                  </Link>
+                  
+                  <Link
+                    to="/repo-metrics/compare"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      location.pathname === '/repo-metrics/compare'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                    }`}
+                  >
+                    <GitCompare className="w-5 h-5" />
+                    <span className="font-medium text-sm">Compare PRs</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Admin Section */}
             <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <Link
@@ -484,6 +536,19 @@ const Layout = ({ children }: LayoutProps) => {
               >
                 <Settings className="w-5 h-5" />
                 <span className="font-medium text-sm">Admin Settings</span>
+              </Link>
+              
+              <Link
+                to="/admin/repositories"
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-4 py-2.5 mt-2 rounded-lg transition-colors ${
+                  location.pathname === '/admin/repositories'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+                }`}
+              >
+                <FolderGit2 className="w-5 h-5" />
+                <span className="font-medium text-sm">Repository List</span>
               </Link>
               
               {/* Demo Links Toggle */}
