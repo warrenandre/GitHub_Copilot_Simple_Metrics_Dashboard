@@ -22,6 +22,7 @@ import {
   FolderGit2,
   GitPullRequest,
   GitCompare,
+  BarChart3,
 } from 'lucide-react'
 import { initAppMetadata, checkSystemState, startPeriodicValidation, monitorFooterElement } from '../utils/integrity'
 import { useFooterProtection } from '../hooks/useFooterProtection'
@@ -118,6 +119,36 @@ const Layout = ({ children }: LayoutProps) => {
             >
               <HomeIcon className="w-5 h-5" />
               <span className="font-medium text-sm">Home</span>
+            </Link>
+
+            <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
+
+            {/* Compare Metrics Link */}
+            <Link
+              to="/compare-metrics"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/compare-metrics'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span className="font-medium text-sm">Compare Metrics</span>
+            </Link>
+
+            {/* Custom Dashboard Link */}
+            <Link
+              to="/custom-dashboard"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/custom-dashboard'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="font-medium text-sm">Custom Dashboard</span>
             </Link>
 
             <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
@@ -576,7 +607,7 @@ const Layout = ({ children }: LayoutProps) => {
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 light:text-gray-500">Version</p>
-              <p className="text-xs font-bold text-blue-400">v1.0.0</p>
+              <p className="text-xs font-bold text-blue-400">v1.1.0</p>
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
               {footerText}

@@ -14,6 +14,8 @@ import Admin from './pages/Admin'
 import RepositoryList from './pages/RepositoryList'
 import RepoMetrics from './pages/RepoMetrics'
 import PRComparison from './pages/PRComparison'
+import CompareMetrics from './pages/CompareMetrics'
+import CustomDashboard from './pages/CustomDashboard'
 import EnterpriseSeats from './pages/enterprise/live/Seats'
 import EnterpriseOverview from './pages/enterprise/live/Overview'
 import EnterpriseUsage from './pages/enterprise/live/Usage'
@@ -38,6 +40,9 @@ function App() {
         <Routes>
           {/* Home Route */}
           <Route path="/" element={<Home />} />
+          
+          {/* Custom Dashboard Route */}
+          <Route path="/custom-dashboard" element={<CustomDashboard />} />
           
           {/* Demo Routes */}
           <Route path="/demo" element={<Overview />} />
@@ -76,6 +81,9 @@ function App() {
           {/* Repo Metrics Route */}
           <Route path="/repo-metrics" element={<RepoMetrics />} />
           <Route path="/repo-metrics/compare" element={<PRComparison />} />
+          
+          {/* Compare Metrics Route */}
+          <Route path="/compare-metrics" element={<CompareMetrics />} />
         </Routes>
       </Layout>
     </ThemeProvider>
