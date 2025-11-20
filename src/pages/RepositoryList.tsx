@@ -125,7 +125,7 @@ const RepositoryList = () => {
       const url = `https://api.github.com/repos/${repo.owner}/${repo.name}/pulls?state=all&per_page=100`
       const response = await fetch(url, {
         headers: {
-          'Authorization': `token ${repo.token}`,
+          'Authorization': `Bearer ${repo.token}`,
           'Accept': 'application/vnd.github.v3+json'
         }
       })
