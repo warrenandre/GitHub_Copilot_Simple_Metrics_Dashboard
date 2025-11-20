@@ -11,6 +11,9 @@ import LiveUsage from './pages/org/live/Usage'
 import LivePerformance from './pages/org/live/Performance'
 import LiveAdoption from './pages/org/live/Adoption'
 import Admin from './pages/Admin'
+import RepositoryList from './pages/RepositoryList'
+import RepoMetrics from './pages/RepoMetrics'
+import PRComparison from './pages/PRComparison'
 import EnterpriseSeats from './pages/enterprise/live/Seats'
 import EnterpriseOverview from './pages/enterprise/live/Overview'
 import EnterpriseUsage from './pages/enterprise/live/Usage'
@@ -68,6 +71,11 @@ function App() {
           
           {/* Admin Route */}
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/repositories" element={<RepositoryList />} />
+          
+          {/* Repo Metrics Route */}
+          <Route path="/repo-metrics" element={<RepoMetrics />} />
+          <Route path="/repo-metrics/compare" element={<PRComparison />} />
         </Routes>
       </Layout>
     </ThemeProvider>
