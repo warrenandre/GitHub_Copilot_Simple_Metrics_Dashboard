@@ -370,122 +370,122 @@ const DemoUserReport28Day = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Records</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Total Records</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.totalRecords.toLocaleString()}
               </p>
             </div>
-            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="bg-indigo-900/30 p-3 rounded-lg">
+              <Calendar className="w-6 h-6 text-indigo-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Unique Users</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Unique Users</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.uniqueUsers}
               </p>
             </div>
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="bg-blue-900/30 p-3 rounded-lg">
+              <Users className="w-6 h-6 text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Code Generations</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Code Generations</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.totalCodeGeneration.toLocaleString()}
               </p>
             </div>
-            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg">
-              <Code className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="bg-green-900/30 p-3 rounded-lg">
+              <Code className="w-6 h-6 text-green-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Acceptance Rate</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Acceptance Rate</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.avgAcceptanceRate.toFixed(1)}%
               </p>
             </div>
-            <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="bg-purple-900/30 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-purple-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">User Interactions</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">User Interactions</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.totalInteractions.toLocaleString()}
               </p>
             </div>
-            <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg">
-              <User className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            <div className="bg-orange-900/30 p-3 rounded-lg">
+              <User className="w-6 h-6 text-orange-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Lines Added</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Lines Added</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.totalLinesAdded.toLocaleString()}
               </p>
             </div>
-            <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-lg">
-              <FileCode className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="bg-emerald-900/30 p-3 rounded-lg">
+              <FileCode className="w-6 h-6 text-emerald-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Agent Users</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Agent Users</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.agentUsers}
               </p>
             </div>
-            <div className="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-lg">
-              <Cpu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+            <div className="bg-pink-900/30 p-3 rounded-lg">
+              <Cpu className="w-6 h-6 text-pink-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Chat Users</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-2">
+              <p className="text-sm font-medium text-slate-400">Chat Users</p>
+              <p className="text-2xl font-semibold text-white mt-2">
                 {summaryMetrics.chatUsers}
               </p>
             </div>
-            <div className="bg-cyan-100 dark:bg-cyan-900/30 p-3 rounded-lg">
-              <User className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+            <div className="bg-cyan-900/30 p-3 rounded-lg">
+              <User className="w-6 h-6 text-cyan-400" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Daily Activity Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h2 className="text-lg font-semibold text-white mb-4">
           Daily Code Generation Activity
         </h2>
         <div className="h-80">
@@ -581,8 +581,8 @@ const DemoUserReport28Day = () => {
 
       {/* Feature Usage & IDE Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">
             Feature Usage Distribution
           </h2>
           <div className="h-80">
@@ -630,15 +630,15 @@ const DemoUserReport28Day = () => {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center text-slate-400">
                 No feature usage data available
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">
             IDE Distribution
           </h2>
           <div className="h-80">
@@ -686,7 +686,7 @@ const DemoUserReport28Day = () => {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center text-slate-400">
                 No IDE usage data available
               </div>
             )}
@@ -696,8 +696,8 @@ const DemoUserReport28Day = () => {
 
       {/* Model Usage & Language Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">
             Model Usage
           </h2>
           <div className="h-80">
@@ -745,15 +745,15 @@ const DemoUserReport28Day = () => {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center text-slate-400">
                 No model usage data available
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h2 className="text-lg font-semibold text-white mb-4">
             Top 10 Languages
           </h2>
           <div className="h-80">
@@ -820,7 +820,7 @@ const DemoUserReport28Day = () => {
                 }}
               />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className="h-full flex items-center justify-center text-slate-400">
                 No language usage data available
               </div>
             )}
@@ -829,8 +829,8 @@ const DemoUserReport28Day = () => {
       </div>
 
       {/* Lines of Code Trend */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h2 className="text-lg font-semibold text-white mb-4">
           Lines of Code Trend
         </h2>
         <div className="h-80">

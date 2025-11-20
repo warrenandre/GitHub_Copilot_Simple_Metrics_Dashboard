@@ -429,115 +429,115 @@ const UserReport28Day = () => {
       {/* Summary Cards */}
       {summaryMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Total Records
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.totalRecords.toLocaleString()}
                 </p>
               </div>
-              <Calendar className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <Calendar className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Unique Users
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.uniqueUsers.toLocaleString()}
                 </p>
               </div>
-              <Users className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <Users className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Code Generation
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.totalCodeGeneration.toLocaleString()}
                 </p>
               </div>
-              <Code className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <Code className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Acceptance Rate
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.avgAcceptanceRate}%
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <TrendingUp className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Interactions
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.totalInteractions.toLocaleString()}
                 </p>
               </div>
-              <Sparkles className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <Sparkles className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Lines Added
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.totalLinesAdded.toLocaleString()}
                 </p>
               </div>
-              <FileCode className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <FileCode className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Agent Users
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.agentUsers.toLocaleString()}
                 </p>
               </div>
-              <Cpu className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <Cpu className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Chat Users
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-white">
                   {summaryMetrics.chatUsers.toLocaleString()}
                 </p>
               </div>
-              <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <User className="w-8 h-8 text-indigo-400" />
             </div>
           </div>
         </div>
@@ -546,8 +546,8 @@ const UserReport28Day = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Daily Code Generation Activity */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Daily Code Generation Activity
           </h3>
           <div className="h-80">
@@ -607,8 +607,8 @@ const UserReport28Day = () => {
         </div>
 
         {/* Feature Usage Distribution */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Feature Usage Distribution
           </h3>
           <div className="h-80">
@@ -661,8 +661,8 @@ const UserReport28Day = () => {
         </div>
 
         {/* IDE Distribution */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             IDE Distribution
           </h3>
           <div className="h-80">
@@ -718,8 +718,8 @@ const UserReport28Day = () => {
         </div>
 
         {/* Model Usage */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Model Usage
           </h3>
           <div className="h-80">
@@ -772,8 +772,8 @@ const UserReport28Day = () => {
         </div>
 
         {/* Top 10 Languages */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Top 10 Languages
           </h3>
           <div className="h-80">
@@ -825,8 +825,8 @@ const UserReport28Day = () => {
         </div>
 
         {/* Lines of Code Trend */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Lines of Code Trend
           </h3>
           <div className="h-80">
