@@ -33,7 +33,7 @@ interface RepoMetricsData {
 const RepoMetrics = () => {
   const [repoData, setRepoData] = useState<RepoMetricsData[]>([])
   const [selectedRepo, setSelectedRepo] = useState<string>('')
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
 
   // Load all repository metrics from localStorage
   useEffect(() => {

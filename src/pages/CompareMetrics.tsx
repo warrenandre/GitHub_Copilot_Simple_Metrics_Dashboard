@@ -22,10 +22,14 @@ interface ComparisonData {
 
 const CompareMetrics = () => {
   const { theme } = useTheme()
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
   const [selectedMetric, setSelectedMetric] = useState<string>('acceptances')
   const [comparisonPeriod, setComparisonPeriod] = useState<'week' | 'month'>('week')
   const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null)
+  const [livePRData, setLivePRData] = useState<any[]>([])
+  const [hasLiveData, setHasLiveData] = useState(false)
+  const [liveCopilotData, setLiveCopilotData] = useState<any[]>([])
+  const [hasCopilotData, setHasCopilotData] = useState(false)
 
   const metricOptions: MetricOption[] = [
     // Copilot Metrics
@@ -53,11 +57,434 @@ const CompareMetrics = () => {
   // Generate comparison data based on selected metric and period
   useEffect(() => {
     generateComparisonData()
-  }, [selectedMetric, comparisonPeriod, isDemo])
+  }, [selectedMetric, comparisonPeriod, isDemo, hasLiveData, hasCopilotData])
+
+  // Load live PR data on mount
+  useEffect(() => {
+    loadLivePRData()
+    loadLiveCopilotData()
+  }, [])
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('📊 State updated:', { hasLiveData, hasCopilotData, livePRDataCount: livePRData.length, liveCopilotDataCount: liveCopilotData.length })
+  }, [hasLiveData, hasCopilotData, livePRData, liveCopilotData])
+
+  // Auto-switch to available metric when switching to live mode
+  useEffect(() => {
+    if (!isDemo && !isMetricAvailableInLiveMode(selectedMetric)) {
+      // Switch to first available metric based on what data we have
+      if (hasLiveData) {
+        setSelectedMetric('pr_total')
+      } else if (hasCopilotData) {
+        setSelectedMetric('acceptances')
+      }
+    }
+  }, [isDemo, hasLiveData, hasCopilotData, selectedMetric])
+
+  const loadLivePRData = () => {
+    const allRepos: any[] = []
+    
+    // 1. Load from copilot_pr_metrics_data (if exists)
+    const copilotPRData = localStorage.getItem('copilot_pr_metrics_data')
+    if (copilotPRData) {
+      try {
+        const parsed = JSON.parse(copilotPRData)
+        console.log('✓ Found copilot_pr_metrics_data:', Array.isArray(parsed) ? `${parsed.length} repos` : '1 repo')
+        
+        if (Array.isArray(parsed)) {
+          parsed.forEach(repo => {
+            // Normalize the structure to ensure pullRequests exists
+            const prs = repo.pullRequests || repo.pull_requests || repo.prs || []
+            if (prs.length > 0) {
+              allRepos.push({
+                owner: repo.owner || repo.repository_owner || 'unknown',
+                name: repo.name || repo.repository_name || 'unknown',
+                pullRequests: prs,
+                fetchedAt: repo.fetchedAt || repo.fetched_at || new Date().toISOString(),
+                count: prs.length
+              })
+              console.log(`  - Added ${repo.owner}/${repo.name}: ${prs.length} PRs`)
+            }
+          })
+        } else if (parsed.pullRequests) {
+          allRepos.push(parsed)
+          console.log(`  - Added single repo: ${parsed.pullRequests.length} PRs`)
+        }
+      } catch (error) {
+        console.error('Failed to parse copilot_pr_metrics_data:', error)
+      }
+    }
+    
+    // 2. Load all repo_metrics_* from localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith('repo_metrics_')) {
+        try {
+          const data = localStorage.getItem(key)
+          if (data) {
+            const parsed = JSON.parse(data)
+            console.log(`✓ Found ${key}: ${parsed.pullRequests?.length || 0} PRs`)
+            allRepos.push(parsed)
+          }
+        } catch (error) {
+          console.error(`Failed to parse ${key}:`, error)
+        }
+      }
+    }
+    
+    // Remove duplicates based on owner/name (keep the one with more PRs)
+    const repoMap = new Map()
+    allRepos.forEach(repo => {
+      const key = `${repo.owner}_${repo.name}`
+      const existing = repoMap.get(key)
+      if (!existing || (repo.pullRequests?.length || 0) > (existing.pullRequests?.length || 0)) {
+        repoMap.set(key, repo)
+      }
+    })
+    
+    const uniqueRepos = Array.from(repoMap.values())
+    const totalPRs = uniqueRepos.reduce((sum, repo) => sum + (repo.pullRequests?.length || 0), 0)
+    
+    console.log('📊 Total unique repos:', uniqueRepos.length)
+    console.log('📊 Total PRs across all repos:', totalPRs)
+    
+    setLivePRData(uniqueRepos)
+    setHasLiveData(uniqueRepos.length > 0)
+    
+    console.log('✅ setHasLiveData called with:', uniqueRepos.length > 0)
+  }
+
+  const loadLiveCopilotData = () => {
+    // Load Copilot metrics from localStorage
+    const copilotEnterprise = localStorage.getItem('copilot_enterprise_metrics_data')
+    const copilotOrg = localStorage.getItem('copilot_org_metrics_data')
+    const copilotLegacy = localStorage.getItem('copilot_metrics_data')
+    
+    let metricsData: any[] = []
+    
+    if (copilotEnterprise) {
+      try {
+        metricsData = JSON.parse(copilotEnterprise)
+        console.log('✓ Found copilot_enterprise_metrics_data:', metricsData.length, 'days')
+      } catch (error) {
+        console.error('Failed to parse copilot_enterprise_metrics_data:', error)
+      }
+    } else if (copilotOrg) {
+      try {
+        metricsData = JSON.parse(copilotOrg)
+        console.log('✓ Found copilot_org_metrics_data:', metricsData.length, 'days')
+      } catch (error) {
+        console.error('Failed to parse copilot_org_metrics_data:', error)
+      }
+    } else if (copilotLegacy) {
+      try {
+        metricsData = JSON.parse(copilotLegacy)
+        console.log('✓ Found copilot_metrics_data:', metricsData.length, 'days')
+      } catch (error) {
+        console.error('Failed to parse copilot_metrics_data:', error)
+      }
+    }
+    
+    setLiveCopilotData(metricsData)
+    setHasCopilotData(metricsData.length > 0)
+    
+    console.log('✅ setHasCopilotData called with:', metricsData.length > 0)
+  }
+
+  const isMetricAvailableInLiveMode = (metricId: string): boolean => {
+    // PR metrics available if we have PR data
+    if (metricId.startsWith('pr_') && hasLiveData) {
+      return true
+    }
+    // Copilot metrics available if we have Copilot data
+    if (!metricId.startsWith('pr_') && !metricId.startsWith('commits') && !metricId.startsWith('contributors') && !metricId.startsWith('code_changes') && hasCopilotData) {
+      return true
+    }
+    return false
+  }
+
+  const calculateLiveComparisonData = (metricId: string): ComparisonData | null => {
+    if (!hasLiveData || !isMetricAvailableInLiveMode(metricId)) {
+      return null
+    }
+
+    // Flatten all PRs from all repos
+    const allPRs = livePRData.flatMap(repo => repo.pullRequests || [])
+    
+    if (allPRs.length === 0) {
+      console.log('⚠️ No PRs found in live data')
+      return null
+    }
+
+    console.log(`📈 Calculating ${metricId} for ${allPRs.length} PRs`)
+
+    const now = new Date()
+    const periodMs = comparisonPeriod === 'week' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000
+    const currentPeriodStart = new Date(now.getTime() - periodMs)
+    const previousPeriodStart = new Date(now.getTime() - (2 * periodMs))
+
+    let currentValue = 0
+    let previousValue = 0
+
+    switch (metricId) {
+      case 'pr_total':
+        currentValue = allPRs.filter(pr => {
+          const created = new Date(pr.created_at)
+          return created >= currentPeriodStart && created <= now
+        }).length
+        previousValue = allPRs.filter(pr => {
+          const created = new Date(pr.created_at)
+          return created >= previousPeriodStart && created < currentPeriodStart
+        }).length
+        break
+
+      case 'pr_merged':
+        currentValue = allPRs.filter(pr => {
+          if (!pr.merged_at) return false
+          const merged = new Date(pr.merged_at)
+          return merged >= currentPeriodStart && merged <= now
+        }).length
+        previousValue = allPRs.filter(pr => {
+          if (!pr.merged_at) return false
+          const merged = new Date(pr.merged_at)
+          return merged >= previousPeriodStart && merged < currentPeriodStart
+        }).length
+        break
+
+      case 'pr_open':
+        currentValue = allPRs.filter(pr => pr.state === 'open').length
+        // For open PRs, previous value is also current open count (snapshot metric)
+        previousValue = currentValue
+        break
+
+      case 'pr_closed':
+        currentValue = allPRs.filter(pr => {
+          if (pr.state !== 'closed' || pr.merged_at) return false
+          const closed = new Date(pr.closed_at || pr.updated_at)
+          return closed >= currentPeriodStart && closed <= now
+        }).length
+        previousValue = allPRs.filter(pr => {
+          if (pr.state !== 'closed' || pr.merged_at) return false
+          const closed = new Date(pr.closed_at || pr.updated_at)
+          return closed >= previousPeriodStart && closed < currentPeriodStart
+        }).length
+        break
+
+      case 'pr_contributors':
+        const currentContributors = new Set(
+          allPRs.filter(pr => {
+            const created = new Date(pr.created_at)
+            return created >= currentPeriodStart && created <= now
+          }).map(pr => pr.user.login)
+        )
+        const previousContributors = new Set(
+          allPRs.filter(pr => {
+            const created = new Date(pr.created_at)
+            return created >= previousPeriodStart && created < currentPeriodStart
+          }).map(pr => pr.user.login)
+        )
+        currentValue = currentContributors.size
+        previousValue = previousContributors.size
+        break
+
+      case 'pr_merge_time':
+        const currentMerged = allPRs.filter(pr => {
+          if (!pr.merged_at) return false
+          const merged = new Date(pr.merged_at)
+          return merged >= currentPeriodStart && merged <= now
+        })
+        const previousMerged = allPRs.filter(pr => {
+          if (!pr.merged_at) return false
+          const merged = new Date(pr.merged_at)
+          return merged >= previousPeriodStart && merged < currentPeriodStart
+        })
+
+        if (currentMerged.length > 0) {
+          const totalCurrentHours = currentMerged.reduce((sum, pr) => {
+            const created = new Date(pr.created_at)
+            const merged = new Date(pr.merged_at!)
+            return sum + (merged.getTime() - created.getTime()) / (1000 * 60 * 60)
+          }, 0)
+          currentValue = totalCurrentHours / currentMerged.length
+        }
+
+        if (previousMerged.length > 0) {
+          const totalPreviousHours = previousMerged.reduce((sum, pr) => {
+            const created = new Date(pr.created_at)
+            const merged = new Date(pr.merged_at!)
+            return sum + (merged.getTime() - created.getTime()) / (1000 * 60 * 60)
+          }, 0)
+          previousValue = totalPreviousHours / previousMerged.length
+        }
+        break
+
+      default:
+        return null
+    }
+
+    const change = currentValue - previousValue
+    const changePercent = previousValue !== 0 ? (change / previousValue) * 100 : 0
+
+    return {
+      metric: metricId,
+      current: Math.round(currentValue * 10) / 10,
+      previous: Math.round(previousValue * 10) / 10,
+      change: Math.round(change * 10) / 10,
+      changePercent: Math.round(changePercent * 10) / 10,
+    }
+  }
+
+  const calculateLiveCopilotComparisonData = (metricId: string): ComparisonData | null => {
+    if (!hasCopilotData) {
+      return null
+    }
+
+    console.log(`📈 Calculating Copilot ${metricId} for ${liveCopilotData.length} days`)
+
+    const now = new Date()
+    const periodMs = comparisonPeriod === 'week' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000
+    const currentPeriodStart = new Date(now.getTime() - periodMs)
+    const previousPeriodStart = new Date(now.getTime() - (2 * periodMs))
+
+    // Filter data by period
+    const currentPeriodData = liveCopilotData.filter(day => {
+      const date = new Date(day.date)
+      return date >= currentPeriodStart && date <= now
+    })
+
+    const previousPeriodData = liveCopilotData.filter(day => {
+      const date = new Date(day.date)
+      return date >= previousPeriodStart && date < currentPeriodStart
+    })
+
+    let currentValue = 0
+    let previousValue = 0
+
+    switch (metricId) {
+      case 'acceptances':
+        currentValue = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_acceptances || 0), 0)
+        }, 0)
+        previousValue = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_acceptances || 0), 0)
+        }, 0)
+        break
+
+      case 'suggestions':
+        currentValue = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_suggestions || 0), 0)
+        }, 0)
+        previousValue = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_suggestions || 0), 0)
+        }, 0)
+        break
+
+      case 'acceptance_rate':
+        const currentSuggestions = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_suggestions || 0), 0)
+        }, 0)
+        const currentAcceptances = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_acceptances || 0), 0)
+        }, 0)
+        currentValue = currentSuggestions > 0 ? (currentAcceptances / currentSuggestions) * 100 : 0
+
+        const previousSuggestions = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_suggestions || 0), 0)
+        }, 0)
+        const previousAcceptances = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_acceptances || 0), 0)
+        }, 0)
+        previousValue = previousSuggestions > 0 ? (previousAcceptances / previousSuggestions) * 100 : 0
+        break
+
+      case 'active_users':
+        // Use total_active_users from daily metrics
+        currentValue = currentPeriodData.reduce((sum, day) => sum + (day.total_active_users || 0), 0) / (currentPeriodData.length || 1)
+        previousValue = previousPeriodData.reduce((sum, day) => sum + (day.total_active_users || 0), 0) / (previousPeriodData.length || 1)
+        break
+
+      case 'lines_suggested':
+        currentValue = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_lines_suggested || 0), 0)
+        }, 0)
+        previousValue = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_lines_suggested || 0), 0)
+        }, 0)
+        break
+
+      case 'lines_accepted':
+        currentValue = currentPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_lines_accepted || 0), 0)
+        }, 0)
+        previousValue = previousPeriodData.reduce((sum, day) => {
+          const languages = day.copilot_ide_code_completions?.languages || []
+          return sum + languages.reduce((s: number, lang: any) => s + (lang.total_code_lines_accepted || 0), 0)
+        }, 0)
+        break
+
+      default:
+        return null
+    }
+
+    const change = currentValue - previousValue
+    const changePercent = previousValue !== 0 ? (change / previousValue) * 100 : 0
+
+    return {
+      metric: metricId,
+      current: Math.round(currentValue * 10) / 10,
+      previous: Math.round(previousValue * 10) / 10,
+      change: Math.round(change * 10) / 10,
+      changePercent: Math.round(changePercent * 10) / 10,
+    }
+  }
 
   const generateComparisonData = () => {
+    console.log('🔄 generateComparisonData:', { 
+      isDemo, 
+      hasLiveData, 
+      hasCopilotData, 
+      selectedMetric,
+      isMetricAvailable: isMetricAvailableInLiveMode(selectedMetric)
+    })
+    
+    // Try to use live data first
     if (!isDemo) {
-      // In live mode, would fetch real data here
+      // Try PR metrics
+      if (hasLiveData && selectedMetric.startsWith('pr_')) {
+        const liveData = calculateLiveComparisonData(selectedMetric)
+        if (liveData) {
+          console.log('✓ Using live PR data for', selectedMetric)
+          setComparisonData(liveData)
+          return
+        }
+      }
+      
+      // Try Copilot metrics
+      if (hasCopilotData && !selectedMetric.startsWith('pr_')) {
+        const liveCopilotMetricData = calculateLiveCopilotComparisonData(selectedMetric)
+        if (liveCopilotMetricData) {
+          console.log('✓ Using live Copilot data for', selectedMetric)
+          setComparisonData(liveCopilotMetricData)
+          return
+        }
+      }
+    }
+
+    if (!isDemo) {
+      // In live mode without data or unsupported metric
+      console.log('⚠️ No live data available or unsupported metric')
       setComparisonData(null)
       return
     }
@@ -68,8 +495,8 @@ const CompareMetrics = () => {
       suggestions: { current: 2100, variability: 0.12 },
       acceptance_rate: { current: 59.5, variability: 0.08 },
       active_users: { current: 24, variability: 0.1 },
-      lines_suggested: { current: 8400, variability: 0.2 },
-      lines_accepted: { current: 5200, variability: 0.18 },
+      lines_suggested: { current: 4300, variability: 0.2 },
+      lines_accepted: { current: 2900, variability: 0.18 },
       pr_total: { current: 45, variability: 0.2 },
       pr_merged: { current: 38, variability: 0.15 },
       pr_open: { current: 5, variability: 0.3 },
@@ -155,15 +582,29 @@ const CompareMetrics = () => {
       </div>
 
       {/* Live Mode Banner */}
-      {!isDemo && (
+      {!isDemo && hasLiveData && (
+        <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-100">
+              <p className="font-semibold mb-1">Live Data Mode - PR Metrics Available</p>
+              <p className="text-blue-200">
+                Viewing live PR metrics from your repositories. Select any PR metric to compare. 
+                Copilot and General metrics are only available in Demo Mode.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isDemo && !hasLiveData && (
         <div className="bg-orange-900/20 border border-orange-700/50 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-orange-100">
-              <p className="font-semibold mb-1">Live Data Mode</p>
+              <p className="font-semibold mb-1">No Live Data Available</p>
               <p className="text-orange-200">
-                Connect your repositories in the Repository List page to view live metric comparisons.
-                Switch to Demo Mode to explore with sample data.
+                Connect your repositories in the Repository List page to fetch PR data, or switch to Demo Mode to explore with sample data.
               </p>
             </div>
           </div>
@@ -199,9 +640,18 @@ const CompareMetrics = () => {
             className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <optgroup label="Copilot Metrics">
-              {metricOptions.filter(m => m.category === 'copilot').map(option => (
-                <option key={option.id} value={option.id}>{option.name}</option>
-              ))}
+              {metricOptions.filter(m => m.category === 'copilot').map(option => {
+                const available = isDemo || isMetricAvailableInLiveMode(option.id)
+                return (
+                  <option 
+                    key={option.id} 
+                    value={option.id}
+                    disabled={!available}
+                  >
+                    {option.name}{!available ? ' (Live data N/A)' : ''}
+                  </option>
+                )
+              })}
             </optgroup>
             <optgroup label="Pull Request Metrics">
               {metricOptions.filter(m => m.category === 'pr').map(option => (
@@ -209,9 +659,18 @@ const CompareMetrics = () => {
               ))}
             </optgroup>
             <optgroup label="General Metrics">
-              {metricOptions.filter(m => m.category === 'general').map(option => (
-                <option key={option.id} value={option.id}>{option.name}</option>
-              ))}
+              {metricOptions.filter(m => m.category === 'general').map(option => {
+                const available = isDemo || isMetricAvailableInLiveMode(option.id)
+                return (
+                  <option 
+                    key={option.id} 
+                    value={option.id}
+                    disabled={!available}
+                  >
+                    {option.name}{!available ? ' (Live data N/A)' : ''}
+                  </option>
+                )
+              })}
             </optgroup>
           </select>
           {selectedMetricInfo && (
@@ -254,7 +713,7 @@ const CompareMetrics = () => {
       </div>
 
       {/* Comparison Results */}
-      {isDemo && comparisonData && (
+      {comparisonData && (
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -461,12 +920,12 @@ const CompareMetrics = () => {
       )}
 
       {/* Empty State for Live Mode */}
-      {!isDemo && (
+      {!isDemo && !hasLiveData && (
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-12 text-center">
           <BarChart3 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">No Data Available</h3>
           <p className="text-slate-400 mb-6">
-            Configure your repositories and fetch metrics to start comparing data.
+            Configure your repositories and fetch PR data to start comparing metrics.
           </p>
           <button
             onClick={() => setIsDemo(true)}

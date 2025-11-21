@@ -16,7 +16,7 @@ const LiveOverview = () => {
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [dateRange, setDateRange] = useState<DateRange>('daily')
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
 
   const loadMetrics = async () => {
     setLoading(true)

@@ -31,7 +31,7 @@ const EnterpriseSeats = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
 
   const loadSeatsData = () => {
     setLoading(true)

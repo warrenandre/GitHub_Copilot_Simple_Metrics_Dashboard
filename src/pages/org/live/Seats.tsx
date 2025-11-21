@@ -38,7 +38,7 @@ const LiveSeats = () => {
   const [orgSeats, setOrgSeats] = useState<SeatsData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
   
   useEffect(() => {
     loadSeatsData()

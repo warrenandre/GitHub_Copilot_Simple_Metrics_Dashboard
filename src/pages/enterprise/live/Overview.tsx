@@ -36,7 +36,7 @@ const EnterpriseOverview = () => {
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
   const [selectedRange, setSelectedRange] = useState<DateRangeType>('all')
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
 
   const loadMetricsData = () => {
     setLoading(true)

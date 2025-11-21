@@ -98,7 +98,7 @@ interface UserReportData {
 const UserReport28Day = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangeType>("all");
   const [selectedUser, setSelectedUser] = useState<string>("all");
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true');
   const [reportData, setReportData] = useState<UserReportData | null>(null);
 
   // Load data from localStorage or demo
