@@ -14,6 +14,7 @@ const RepositoryList = () => {
   const [showToken, setShowToken] = useState<{ [key: string]: boolean }>({})
   const [fetchingMetrics, setFetchingMetrics] = useState<{ [key: string]: boolean }>({})
   const [fetchStatus, setFetchStatus] = useState<{ [key: string]: { success: boolean; message: string } }>({})
+  const [showClearDataConfirm, setShowClearDataConfirm] = useState(false)
   
   // Check if demo mode is enabled from environment config
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
@@ -107,6 +108,36 @@ const RepositoryList = () => {
     }
   }
 
+  // Clear all fetched repository metrics data
+  const clearRepoData = () => {
+    if (!showClearDataConfirm) {
+      setShowClearDataConfirm(true)
+      return
+    }
+
+    // Clear all repo_metrics_* keys from localStorage
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith('repo_metrics_')) {
+        keysToRemove.push(key)
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+    
+    // Also clear copilot_pr_metrics_data if it exists
+    localStorage.removeItem('copilot_pr_metrics_data')
+    
+    // Reset confirmation state
+    setShowClearDataConfirm(false)
+    
+    // Clear any fetch status
+    setFetchStatus({})
+    
+    console.log(`✅ Cleared ${keysToRemove.length} repository data entries`)
+  }
+
   // Fetch pull request metrics from GitHub API
   const fetchRepositoryMetrics = async (repoId: string) => {
     const repo = repositories.find(r => r.id === repoId)
@@ -180,14 +211,30 @@ const RepositoryList = () => {
         </div>
         <div className="flex items-center gap-3">
           {repositories.length > 0 && (
-            <button
-              onClick={clearAllRepositories}
-              disabled={isDemoMode}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Trash className="w-5 h-5" />
-              Clear All
-            </button>
+            <>
+              <button
+                onClick={clearRepoData}
+                onBlur={() => setTimeout(() => setShowClearDataConfirm(false), 200)}
+                disabled={isDemoMode}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  showClearDataConfirm
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                }`}
+                title={showClearDataConfirm ? 'Click again to confirm clearing fetched data' : 'Clear all fetched repository metrics data'}
+              >
+                <Trash2 className="w-5 h-5" />
+                {showClearDataConfirm ? 'Confirm Clear Data?' : 'Clear Repo Data'}
+              </button>
+              <button
+                onClick={clearAllRepositories}
+                disabled={isDemoMode}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash className="w-5 h-5" />
+                Clear All Configs
+              </button>
+            </>
           )}
           <button
             onClick={addRepository}

@@ -123,36 +123,6 @@ const Layout = ({ children }: LayoutProps) => {
 
             <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
 
-            {/* Compare Metrics Link */}
-            <Link
-              to="/compare-metrics"
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                location.pathname === '/compare-metrics'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5" />
-              <span className="font-medium text-sm">Compare Metrics</span>
-            </Link>
-
-            {/* Custom Dashboard Link */}
-            <Link
-              to="/custom-dashboard"
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                location.pathname === '/custom-dashboard'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-              }`}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium text-sm">Custom Dashboard</span>
-            </Link>
-
-            <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
-
             {/* Enterprise Metrics Section */}
             <div>
               <button
@@ -393,7 +363,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
 
             {/* Org Metrics Section */}
-            <div className="pt-2">
+            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <button
                 onClick={() => setOrgMetricsExpanded(!orgMetricsExpanded)}
                 className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
@@ -553,6 +523,34 @@ const Layout = ({ children }: LayoutProps) => {
                 </div>
               )}
             </div>
+
+            {/* Compare Metrics Link */}
+            <Link
+              to="/compare-metrics"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/compare-metrics'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span className="font-medium text-sm">Compare Metrics</span>
+            </Link>
+
+            {/* Custom Dashboard Link */}
+            <Link
+              to="/custom-dashboard"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/custom-dashboard'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="font-medium text-sm">Custom Dashboard</span>
+            </Link>
 
             {/* Admin Section */}
             <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
