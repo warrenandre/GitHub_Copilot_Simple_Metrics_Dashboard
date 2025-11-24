@@ -51,7 +51,7 @@ const Insights = () => {
   const [metricsData, setMetricsData] = useState<MetricsData[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedInsights, setExpandedInsights] = useState<Set<number>>(new Set())
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, setIsDemo] = useState(import.meta.env.VITE_DEMO_MODE === 'true')
 
   const loadData = () => {
     try {
