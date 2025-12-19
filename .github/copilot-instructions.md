@@ -19,3 +19,11 @@ React application for visualizing GitHub Copilot metrics using Nivo charts.
 - Use the ThemeContext for theme state management
 - Always build project after making changes to ensure everything works correctly
 - Always remove unused variables & functions
+- List of allowed Library and packages to use:
+  - React
+  - React Router DOM
+  - Nivo
+  - Tailwind CSS
+  - Vitest + React Testing Library for testing
+  - Any other package must be approved before use
+
