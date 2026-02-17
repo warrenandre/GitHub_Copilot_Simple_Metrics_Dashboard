@@ -19,3 +19,10 @@ React application for visualizing GitHub Copilot metrics using Nivo charts.
 - Use the ThemeContext for theme state management
 - Always build project after making changes to ensure everything works correctly
 - Always remove unused variables & functions
+
+## use MCP markitdown for generating documentation in PDF format for business stakeholders. Use the following structure for the documentation:
+1. **Executive Summary**: High-level overview of the metrics and insights
+2. **Metrics Overview**: Detailed breakdown of key metrics with visualizations
+3. **Trends & Analysis**: Analysis of trends and patterns in the data
+4. **Recommendations**: Actionable recommendations based on the insights
+5. **Appendix**: Additional data, charts, and technical details
