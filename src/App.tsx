@@ -1,91 +1,53 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { DashboardProvider } from './contexts/DashboardContext'
 import Layout from './components/Layout'
-import Home from './pages/Home'
-import Overview from './pages/org/demo/Overview'
-import Usage from './pages/org/demo/Usage'
-import Performance from './pages/org/demo/Performance'
-import Adoption from './pages/org/demo/Adoption'
-import LiveOverview from './pages/org/live/Overview'
-import LiveUsage from './pages/org/live/Usage'
-import LivePerformance from './pages/org/live/Performance'
-import LiveAdoption from './pages/org/live/Adoption'
+import DashboardSetup from './pages/DashboardSetup'
+import GeneratedDashboard from './pages/GeneratedDashboard'
 import Admin from './pages/Admin'
-import RepositoryList from './pages/RepositoryList'
-import RepoMetrics from './pages/RepoMetrics'
-import PRComparison from './pages/PRComparison'
-import CompareMetrics from './pages/CompareMetrics'
-import CustomDashboard from './pages/CustomDashboard'
-import EnterpriseSeats from './pages/enterprise/live/Seats'
-import EnterpriseOverview from './pages/enterprise/live/Overview'
-import EnterpriseUsage from './pages/enterprise/live/Usage'
-import EnterprisePerformance from './pages/enterprise/live/Performance'
-import EnterpriseAdoption from './pages/enterprise/live/Adoption'
-import EnterpriseReport28Day from './pages/enterprise/live/Report28Day'
-import EnterpriseUserReport28Day from './pages/enterprise/live/UserReport28Day'
-import EnterpriseInsights from './pages/enterprise/live/Insights'
-import EnterpriseDemoSeats from './pages/enterprise/demo/Seats'
-import EnterpriseDemoOverview from './pages/enterprise/demo/Overview'
-import EnterpriseDemoUsage from './pages/enterprise/demo/Usage'
-import EnterpriseDemoPerformance from './pages/enterprise/demo/Performance'
-import EnterpriseDemoAdoption from './pages/enterprise/demo/Adoption'
-import EnterpriseDemoReport28Day from './pages/enterprise/demo/Report28Day'
-import EnterpriseDemoUserReport28Day from './pages/enterprise/demo/UserReport28Day'
-import EnterpriseDemoInsights from './pages/enterprise/demo/Insights'
+
+// Wrapper component to check if dashboard is configured
+const DashboardRedirect = () => {
+  const savedConfig = localStorage.getItem('copilot_dashboard_config')
+  if (savedConfig) {
+    try {
+      const config = JSON.parse(savedConfig)
+      if (config.level && config.selectedMetrics?.length > 0) {
+        return <Navigate to="/dashboard" replace />
+      }
+    } catch {
+      // Invalid config, go to setup
+    }
+  }
+  return <Navigate to="/setup" replace />
+}
 
 function App() {
   return (
     <ThemeProvider>
-      <Layout>
+      <DashboardProvider>
         <Routes>
-          {/* Home Route */}
-          <Route path="/" element={<Home />} />
+          {/* Home - redirects to dashboard or setup */}
+          <Route path="/" element={<DashboardRedirect />} />
           
-          {/* Custom Dashboard Route */}
-          <Route path="/custom-dashboard" element={<CustomDashboard />} />
+          {/* Dashboard Setup Wizard */}
+          <Route path="/setup" element={<DashboardSetup />} />
           
-          {/* Demo Routes */}
-          <Route path="/demo" element={<Overview />} />
-          <Route path="/demo/usage" element={<Usage />} />
-          <Route path="/demo/performance" element={<Performance />} />
-          <Route path="/demo/adoption" element={<Adoption />} />
+          {/* Generated Dashboard */}
+          <Route path="/dashboard" element={
+            <Layout>
+              <GeneratedDashboard />
+            </Layout>
+          } />
           
-          {/* Live Routes */}
-          <Route path="/live" element={<LiveOverview />} />
-          <Route path="/live/usage" element={<LiveUsage />} />
-          <Route path="/live/performance" element={<LivePerformance />} />
-          <Route path="/live/adoption" element={<LiveAdoption />} />
-          
-          {/* Enterprise Routes */}
-          <Route path="/enterprise/demo/overview" element={<EnterpriseDemoOverview />} />
-          <Route path="/enterprise/demo/usage" element={<EnterpriseDemoUsage />} />
-          <Route path="/enterprise/demo/performance" element={<EnterpriseDemoPerformance />} />
-          <Route path="/enterprise/demo/adoption" element={<EnterpriseDemoAdoption />} />
-          <Route path="/enterprise/demo/insights" element={<EnterpriseDemoInsights />} />
-          <Route path="/enterprise/demo/seats" element={<EnterpriseDemoSeats />} />
-          <Route path="/enterprise/demo/report" element={<EnterpriseDemoReport28Day />} />
-          <Route path="/enterprise/demo/user-report" element={<EnterpriseDemoUserReport28Day />} />
-          <Route path="/enterprise/overview" element={<EnterpriseOverview />} />
-          <Route path="/enterprise/usage" element={<EnterpriseUsage />} />
-          <Route path="/enterprise/performance" element={<EnterprisePerformance />} />
-          <Route path="/enterprise/adoption" element={<EnterpriseAdoption />} />
-          <Route path="/enterprise/insights" element={<EnterpriseInsights />} />
-          <Route path="/enterprise/seats" element={<EnterpriseSeats />} />
-          <Route path="/enterprise/report" element={<EnterpriseReport28Day />} />
-          <Route path="/enterprise/user-report" element={<EnterpriseUserReport28Day />} />
-          
-          {/* Admin Route */}
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/repositories" element={<RepositoryList />} />
-          
-          {/* Repo Metrics Route */}
-          <Route path="/repo-metrics" element={<RepoMetrics />} />
-          <Route path="/repo-metrics/compare" element={<PRComparison />} />
-          
-          {/* Compare Metrics Route */}
-          <Route path="/compare-metrics" element={<CompareMetrics />} />
+          {/* Admin Route for API Configuration */}
+          <Route path="/admin" element={
+            <Layout>
+              <Admin />
+            </Layout>
+          } />
         </Routes>
-      </Layout>
+      </DashboardProvider>
     </ThemeProvider>
   )
 }

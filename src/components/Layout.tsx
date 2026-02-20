@@ -1,31 +1,17 @@
 import { ReactNode, useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Activity,
-  TrendingUp,
-  Users,
   Github,
   Menu,
   X,
-  ChevronDown,
-  ChevronRight,
-  Database,
   Settings,
-  Building2,
-  Home,
-  Building,
-  Home as HomeIcon,
-  FileBarChart,
-  Lightbulb,
-  User,
-  FolderGit2,
-  GitPullRequest,
-  GitCompare,
-  BarChart3,
+  Sliders,
+  RefreshCw,
 } from 'lucide-react'
 import { initAppMetadata, checkSystemState, startPeriodicValidation, monitorFooterElement } from '../utils/integrity'
 import { useFooterProtection } from '../hooks/useFooterProtection'
+import { useDashboard } from '../contexts/DashboardContext'
 
 interface LayoutProps {
   children: ReactNode
@@ -33,25 +19,11 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { config, resetDashboard } = useDashboard()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [orgMetricsExpanded, setOrgMetricsExpanded] = useState(false)
-  const [demoExpanded, setDemoExpanded] = useState(false)
-  const [enterpriseExpanded, setEnterpriseExpanded] = useState(false)
-  const [enterpriseDemoExpanded, setEnterpriseDemoExpanded] = useState(false)
-  const [repoMetricsExpanded, setRepoMetricsExpanded] = useState(false)
   const [footerText, setFooterText] = useState('Developed by Warren Joubert - Microsoft Software Engineer')
   const [appReady, setAppReady] = useState(true)
-  
-  // Feature flag for showing demo links (default: false for production)
-  const [showDemoLinks, setShowDemoLinks] = useState(() => {
-    const saved = localStorage.getItem('showDemoLinks')
-    return saved !== null ? saved === 'true' : false
-  })
-
-  // Persist feature flag to localStorage
-  useEffect(() => {
-    localStorage.setItem('showDemoLinks', String(showDemoLinks))
-  }, [showDemoLinks])
 
   // Activate footer protection
   useFooterProtection();
@@ -76,16 +48,14 @@ const Layout = ({ children }: LayoutProps) => {
     }
   }, []);
 
+  const handleReconfigureDashboard = () => {
+    resetDashboard()
+    navigate('/setup')
+  }
+
   if (!appReady) {
     return <div className="flex h-screen w-screen bg-black"></div>;
   }
-
-  const menuCategories = [
-    { path: '/demo', label: 'Overview', icon: LayoutDashboard },
-    { path: '/demo/usage', label: 'Usage Metrics', icon: Activity },
-    { path: '/demo/performance', label: 'Performance', icon: TrendingUp },
-    { path: '/demo/adoption', label: 'Adoption', icon: Users },
-  ]
 
   return (
     <div className="flex h-screen bg-slate-900 dark:bg-slate-900 light:bg-gray-50">
@@ -107,507 +77,62 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {/* Home Link */}
+            {/* Dashboard Link */}
             <Link
-              to="/"
+              to="/dashboard"
               onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                location.pathname === '/'
+                location.pathname === '/dashboard'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
               }`}
             >
-              <HomeIcon className="w-5 h-5" />
-              <span className="font-medium text-sm">Home</span>
-            </Link>
-
-            <div className="pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"></div>
-
-            {/* Enterprise Metrics Section */}
-            <div>
-              <button
-                onClick={() => setEnterpriseExpanded(!enterpriseExpanded)}
-                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  <span className="font-semibold text-sm uppercase tracking-wider">Enterprise Metrics</span>
-                </div>
-                {enterpriseExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {enterpriseExpanded && (
-                <div className="mt-1 space-y-2 ml-2">
-                  {/* Demo Section */}
-                  {showDemoLinks && (
-                    <div>
-                      <button
-                        onClick={() => setEnterpriseDemoExpanded(!enterpriseDemoExpanded)}
-                        className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Database className="w-5 h-5" />
-                          <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
-                        </div>
-                        {enterpriseDemoExpanded ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </button>
-                    {enterpriseDemoExpanded && (
-                      <div className="mt-1 space-y-1 ml-2">
-                        <Link
-                          to="/enterprise/demo/overview"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/overview'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <LayoutDashboard className="w-5 h-5" />
-                          <span className="font-medium text-sm">Overview</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/usage"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/usage'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Activity className="w-5 h-5" />
-                          <span className="font-medium text-sm">Usage</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/performance"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/performance'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <TrendingUp className="w-5 h-5" />
-                          <span className="font-medium text-sm">Performance</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/adoption"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/adoption'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Users className="w-5 h-5" />
-                          <span className="font-medium text-sm">Adoption</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/insights"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/insights'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Lightbulb className="w-5 h-5" />
-                          <span className="font-medium text-sm">Insights</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/seats"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/seats'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <Users className="w-5 h-5" />
-                          <span className="font-medium text-sm">Seats</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/report"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/report'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <FileBarChart className="w-5 h-5" />
-                          <span className="font-medium text-sm">28-Day Report</span>
-                        </Link>
-                        <Link
-                          to="/enterprise/demo/user-report"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                            location.pathname === '/enterprise/demo/user-report'
-                              ? 'bg-orange-600 text-white'
-                              : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                          }`}
-                        >
-                          <User className="w-5 h-5" />
-                          <span className="font-medium text-sm">User 28-Day Report</span>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                  )}
-
-                  {/* Live Links - Direct under Enterprise Metrics */}
-                  <Link
-                    to="/enterprise/overview"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/overview'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Home className="w-5 h-5" />
-                    <span className="font-medium text-sm">Overview</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/usage"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/usage'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Activity className="w-5 h-5" />
-                    <span className="font-medium text-sm">Usage</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/performance"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/performance'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <TrendingUp className="w-5 h-5" />
-                    <span className="font-medium text-sm">Performance</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/adoption"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/adoption'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Users className="w-5 h-5" />
-                    <span className="font-medium text-sm">Adoption</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/insights"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/insights'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Lightbulb className="w-5 h-5" />
-                    <span className="font-medium text-sm">Insights</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/seats"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/seats'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Users className="w-5 h-5" />
-                    <span className="font-medium text-sm">Seats</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/report"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/report'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <FileBarChart className="w-5 h-5" />
-                    <span className="font-medium text-sm">28-Day Report</span>
-                  </Link>
-                  <Link
-                    to="/enterprise/user-report"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/enterprise/user-report'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <User className="w-5 h-5" />
-                    <span className="font-medium text-sm">User 28-Day Report</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Org Metrics Section */}
-            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
-              <button
-                onClick={() => setOrgMetricsExpanded(!orgMetricsExpanded)}
-                className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  <span className="font-semibold text-sm uppercase tracking-wider">Org Metrics</span>
-                </div>
-                {orgMetricsExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {orgMetricsExpanded && (
-                <div className="mt-1 space-y-2 ml-2">
-                  {/* Demo Section */}
-                  {showDemoLinks && (
-                    <div>
-                      <button
-                        onClick={() => setDemoExpanded(!demoExpanded)}
-                        className="flex items-center justify-between w-full px-4 py-2 text-slate-400 dark:text-slate-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Database className="w-5 h-5" />
-                          <span className="font-semibold text-sm uppercase tracking-wider">Demo Data</span>
-                        </div>
-                        {demoExpanded ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </button>
-                      {demoExpanded && (
-                        <div className="mt-1 space-y-1 ml-2">
-                          {menuCategories.map((item) => {
-                            const Icon = item.icon
-                            const isActive = location.pathname === item.path
-                            return (
-                              <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                                  isActive
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                                }`}
-                              >
-                                <Icon className="w-5 h-5" />
-                                <span className="font-medium text-sm">{item.label}</span>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Live Links - Direct under Org Metrics */}
-                  <Link
-                    to="/live"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/live'
-                        ? 'bg-green-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-5 h-5" />
-                    <span className="font-medium text-sm">Overview</span>
-                  </Link>
-                  <Link
-                    to="/live/usage"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/live/usage'
-                        ? 'bg-green-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Activity className="w-5 h-5" />
-                    <span className="font-medium text-sm">Usage Metrics</span>
-                  </Link>
-                  <Link
-                    to="/live/performance"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/live/performance'
-                        ? 'bg-green-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <TrendingUp className="w-5 h-5" />
-                    <span className="font-medium text-sm">Performance</span>
-                  </Link>
-                  <Link
-                    to="/live/adoption"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/live/adoption'
-                        ? 'bg-green-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <Users className="w-5 h-5" />
-                    <span className="font-medium text-sm">Adoption</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Repo Metrics Section */}
-            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
-              <button
-                onClick={() => setRepoMetricsExpanded(!repoMetricsExpanded)}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100"
-              >
-                <div className="flex items-center gap-3">
-                  <GitPullRequest className="w-5 h-5 text-slate-400 dark:text-slate-400 light:text-gray-600" />
-                  <span className="font-semibold text-sm uppercase tracking-wider">Repo Metrics</span>
-                </div>
-                {repoMetricsExpanded ? (
-                  <ChevronDown className="w-5 h-5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-slate-400" />
-                )}
-              </button>
-
-              {repoMetricsExpanded && (
-                <div className="mt-2 space-y-1">
-                  <Link
-                    to="/repo-metrics"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/repo-metrics'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <GitPullRequest className="w-5 h-5" />
-                    <span className="font-medium text-sm">Pull Requests</span>
-                  </Link>
-                  
-                  <Link
-                    to="/repo-metrics/compare"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                      location.pathname === '/repo-metrics/compare'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                    }`}
-                  >
-                    <GitCompare className="w-5 h-5" />
-                    <span className="font-medium text-sm">Compare PRs</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Compare Metrics Link */}
-            <Link
-              to="/compare-metrics"
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                location.pathname === '/compare-metrics'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5" />
-              <span className="font-medium text-sm">Compare Metrics</span>
-            </Link>
-
-            {/* Custom Dashboard Link */}
-            <Link
-              to="/custom-dashboard"
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                location.pathname === '/custom-dashboard'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-              }`}
-            >
               <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium text-sm">Custom Dashboard</span>
+              <span className="font-medium text-sm">Dashboard</span>
             </Link>
 
-            {/* Admin Section */}
-            <div className="pt-4 mt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
-              <Link
-                to="/admin"
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
-                  location.pathname === '/admin'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span className="font-medium text-sm">Admin Settings</span>
-              </Link>
-              
-              <Link
-                to="/admin/repositories"
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 mt-2 rounded-lg transition-colors ${
-                  location.pathname === '/admin/repositories'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
-                }`}
-              >
-                <FolderGit2 className="w-5 h-5" />
-                <span className="font-medium text-sm">Repository List</span>
-              </Link>
-              
-              {/* Demo Links Toggle */}
-              <button
-                onClick={() => setShowDemoLinks(!showDemoLinks)}
-                className="flex items-center justify-between w-full px-4 py-2.5 mt-2 rounded-lg transition-colors text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900"
-              >
-                <div className="flex items-center gap-3">
-                  <Database className="w-5 h-5" />
-                  <span className="font-medium text-sm">Demo Links</span>
-                </div>
-                <div className={`w-10 h-5 rounded-full transition-colors ${showDemoLinks ? 'bg-blue-600' : 'bg-slate-600'}`}>
-                  <div className={`w-4 h-4 rounded-full bg-white mt-0.5 transition-transform ${showDemoLinks ? 'ml-5' : 'ml-0.5'}`}></div>
-                </div>
-              </button>
-            </div>
+            {/* Dashboard Info */}
+            {config?.level && (
+              <div className="mx-4 mt-4 p-3 bg-slate-700/50 rounded-lg">
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Current Dashboard</p>
+                <p className="text-sm text-white font-medium">{config?.name || 'My Dashboard'}</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {config?.level === 'enterprise' ? 'Enterprise' : 'Organization'} • {config?.selectedMetrics?.length || 0} metrics
+                </p>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200 mt-4"></div>
+
+            {/* Reconfigure Dashboard */}
+            <button
+              onClick={handleReconfigureDashboard}
+              className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors w-full text-left text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900"
+            >
+              <Sliders className="w-5 h-5" />
+              <span className="font-medium text-sm">Configure Dashboard</span>
+            </button>
+
+            <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200 mt-4"></div>
+
+            {/* API Settings Link */}
+            <Link
+              to="/admin"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                location.pathname === '/admin'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-300 dark:text-slate-300 light:text-gray-700 hover:bg-slate-700 dark:hover:bg-slate-700 light:hover:bg-gray-100 hover:text-white dark:hover:text-white light:hover:text-gray-900'
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="font-medium text-sm">API Settings</span>
+            </Link>
           </nav>
 
-          {/* Footer - Protected Component */}
-          <div 
-            className="px-6 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200"
-            data-footer-protected="true"
-            suppressContentEditableWarning
-            suppressHydrationWarning
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 light:text-gray-500">Version</p>
-              <p className="text-xs font-bold text-blue-400">v1.1.0</p>
-            </div>
-            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
+          {/* Footer */}
+          <div className="px-4 py-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200" data-footer-protected="true">
+            <p id="app-footer-attribution" className="text-xs text-slate-500 dark:text-slate-500 light:text-gray-400 text-center">
               {footerText}
             </p>
           </div>
@@ -625,11 +150,21 @@ const Layout = ({ children }: LayoutProps) => {
             >
               {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <div className="text-right">
-              <p className="text-sm font-medium text-white dark:text-white light:text-gray-900">Last Updated</p>
-              <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
-                {new Date().toLocaleString()}
-              </p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                title="Refresh data"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="text-sm hidden sm:inline">Refresh</span>
+              </button>
+              <div className="text-right">
+                <p className="text-sm font-medium text-white dark:text-white light:text-gray-900">Last Updated</p>
+                <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
+                  {new Date().toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
         </header>

@@ -80,7 +80,7 @@ export function validateMount(): void {
 }
 
 // Periodic validation to ensure footer remains intact
-let _validationInterval: number | null = null;
+let _validationInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startPeriodicValidation(): void {
   // Validate immediately
