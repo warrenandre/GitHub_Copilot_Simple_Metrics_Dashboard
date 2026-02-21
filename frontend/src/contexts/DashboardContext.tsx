@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react'
+import { ExtractedMetric, getDefaultMetrics, extractMetricsFromReport, extractedCategories, MetricCategory } from '../utils/metricExtractor'
 
-// Define available metrics for Enterprise level
+// Define available metrics for Enterprise level (fallback)
 export const enterpriseMetrics = [
   // Code Completions
   { id: 'total_active_users', name: 'Total Active Users', category: 'overview', description: 'Users who have been active in Copilot', icon: 'Users' },
@@ -78,6 +79,7 @@ export interface DashboardConfig {
   useDemo: boolean
   createdAt: string
   name: string
+  importedData?: Record<string, unknown> // Store imported JSON data
 }
 
 interface DashboardContextType {
@@ -91,7 +93,11 @@ interface DashboardContextType {
   resetDashboard: () => void
   isConfigured: boolean
   isLoading: boolean
-  availableMetrics: typeof enterpriseMetrics | typeof organizationMetrics
+  availableMetrics: ExtractedMetric[]
+  metricCategories: MetricCategory[]
+  extractedMetrics: ExtractedMetric[]
+  loadMetricsFromData: (data: Record<string, unknown>) => void
+  clearExtractedMetrics: () => void
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
@@ -102,6 +108,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const [config, setConfig] = useState<DashboardConfig | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [extractedMetrics, setExtractedMetrics] = useState<ExtractedMetric[]>([])
 
   // Load config from localStorage on mount
   useEffect(() => {
@@ -111,6 +118,11 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         const parsed = JSON.parse(saved)
         setConfig(parsed)
         setIsConfigured(parsed.level && parsed.selectedMetrics?.length > 0)
+        // If there's imported data, extract metrics from it
+        if (parsed.importedData) {
+          const metrics = extractMetricsFromReport(parsed.importedData)
+          setExtractedMetrics(metrics)
+        }
       } catch (error) {
         console.error('Failed to load dashboard config:', error)
       }
@@ -161,11 +173,39 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(STORAGE_KEY)
     setConfig(null)
     setIsConfigured(false)
+    setExtractedMetrics([])
   }, [])
 
+  // Load metrics from imported JSON data
+  const loadMetricsFromData = useCallback((data: Record<string, unknown>) => {
+    const metrics = extractMetricsFromReport(data)
+    setExtractedMetrics(metrics)
+    setConfig(prev => prev ? { ...prev, importedData: data } : {
+      level: 'enterprise',
+      selectedMetrics: [],
+      useDemo: false,
+      createdAt: new Date().toISOString(),
+      name: 'My Dashboard',
+      importedData: data
+    })
+  }, [])
+
+  // Clear extracted metrics
+  const clearExtractedMetrics = useCallback(() => {
+    setExtractedMetrics([])
+    setConfig(prev => {
+      if (!prev) return null
+      const { importedData, ...rest } = prev
+      return rest
+    })
+  }, [])
+
+  // Prefer extracted metrics if available, otherwise use default metrics
   const availableMetrics = useMemo(() => 
-    config?.level === 'enterprise' ? enterpriseMetrics : organizationMetrics
-  , [config?.level])
+    extractedMetrics.length > 0 ? extractedMetrics : getDefaultMetrics()
+  , [extractedMetrics])
+
+  const metricCategories = useMemo(() => extractedCategories, [])
 
   const contextValue = useMemo(() => ({
     config,
@@ -178,8 +218,12 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     resetDashboard,
     isConfigured,
     isLoading,
-    availableMetrics
-  }), [config, setLevel, setSelectedMetrics, toggleMetric, setUseDemo, setDashboardName, saveDashboard, resetDashboard, isConfigured, isLoading, availableMetrics])
+    availableMetrics,
+    metricCategories,
+    extractedMetrics,
+    loadMetricsFromData,
+    clearExtractedMetrics
+  }), [config, setLevel, setSelectedMetrics, toggleMetric, setUseDemo, setDashboardName, saveDashboard, resetDashboard, isConfigured, isLoading, availableMetrics, metricCategories, extractedMetrics, loadMetricsFromData, clearExtractedMetrics])
 
   return (
     <DashboardContext.Provider value={contextValue}>

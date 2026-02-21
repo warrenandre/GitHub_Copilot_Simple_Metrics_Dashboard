@@ -33,9 +33,19 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  Download
+  Download,
+  Upload,
+  FileJson,
+  Sparkles,
+  Bot,
+  MousePointer,
+  Minus,
+  FileX,
+  Search,
+  PieChart,
+  Activity
 } from 'lucide-react'
-import { useDashboard, metricCategories, DashboardLevel } from '../contexts/DashboardContext'
+import { useDashboard, DashboardLevel } from '../contexts/DashboardContext'
 import { loadApiConfig, saveApiConfig } from '../config/apiConfig'
 import { githubApiService } from '../services/githubApi'
 import '../contexts/ThemeContext'
@@ -61,6 +71,15 @@ const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = 
   TrendingUp,
   LineChart,
   BarChart,
+  Sparkles,
+  Bot,
+  MousePointer,
+  Minus,
+  FileX,
+  Search,
+  PieChart,
+  Activity,
+  Eye,
 }
 
 const DashboardSetup = () => {
@@ -73,7 +92,10 @@ const DashboardSetup = () => {
     setUseDemo, 
     setDashboardName,
     saveDashboard, 
-    availableMetrics 
+    availableMetrics,
+    metricCategories,
+    loadMetricsFromData,
+    extractedMetrics
   } = useDashboard()
   
   const [step, setStep] = useState(1)
@@ -93,6 +115,12 @@ const DashboardSetup = () => {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [dataDownloaded, setDataDownloaded] = useState(false)
+  
+  // File upload state
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [metricsExtracted, setMetricsExtracted] = useState(extractedMetrics.length > 0)
 
   // Load existing API config on mount
   useEffect(() => {
@@ -185,6 +213,39 @@ const DashboardSetup = () => {
       setDownloadError(error instanceof Error ? error.message : 'Failed to download 30-day metrics')
     } finally {
       setIsDownloading(false)
+    }
+  }
+
+  // Handle JSON file upload for metric extraction
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    setIsUploading(true)
+    setUploadError(null)
+    
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      
+      // Validate that it's a Copilot metrics report
+      if (!data.day_totals || !Array.isArray(data.day_totals)) {
+        throw new Error('Invalid file format. Expected a GitHub Copilot 30-day metrics report with day_totals array.')
+      }
+      
+      // Load metrics from the uploaded data
+      loadMetricsFromData(data)
+      
+      setUploadedFileName(file.name)
+      setMetricsExtracted(true)
+      console.log('✅ Metrics extracted from uploaded file!')
+      console.log(`   File: ${file.name}`)
+      console.log(`   Days: ${data.day_totals.length}`)
+    } catch (error) {
+      console.error('❌ Failed to process uploaded file:', error)
+      setUploadError(error instanceof Error ? error.message : 'Failed to process file')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -708,6 +769,68 @@ const DashboardSetup = () => {
                 )}
               </div>
             )}
+
+            {/* Upload JSON File Section - Extract metrics from existing file */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <div className="flex items-center gap-3 mb-4">
+                <FileJson className="w-6 h-6 text-green-400" />
+                <h3 className="text-lg font-semibold text-white">Import Metrics from JSON</h3>
+              </div>
+              
+              {!metricsExtracted ? (
+                <>
+                  <p className="text-slate-400 text-sm mb-4">
+                    Upload a GitHub Copilot 30-day metrics report (JSON) to automatically extract available metrics for your dashboard.
+                  </p>
+                  
+                  {uploadError && (
+                    <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-red-400 font-medium">Upload Failed</p>
+                          <p className="text-red-300 text-sm mt-1">{uploadError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <label className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors cursor-pointer">
+                    {isUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        Upload JSON File
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                  </label>
+                </>
+              ) : (
+                <div className="p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <div>
+                      <p className="text-green-400 font-medium">Metrics Extracted Successfully</p>
+                      <p className="text-green-300 text-sm mt-1">
+                        {uploadedFileName && `From: ${uploadedFileName} • `}
+                        {extractedMetrics.length} metrics available
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Summary */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
