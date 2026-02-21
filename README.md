@@ -72,17 +72,29 @@ git clone https://github.com/warrenandre/GitHub_Copilot_Simple_Metrics_Dashboard
 cd GHCPDashboardApp
 ```
 
-2. Install dependencies:
+2. Install dependencies for all parts:
 ```bash
-npm install
+npm run install:all
 ```
 
-3. Start the development server:
+Or install separately:
+```bash
+# Root dependencies (for running both servers)
+npm install
+
+# Frontend dependencies
+cd frontend && npm install
+
+# Backend dependencies
+cd ../backend && npm install
+```
+
+3. Start both frontend and backend servers:
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`
 
 ### API Configuration
 
@@ -116,24 +128,39 @@ echo "VITE_GITHUB_TOKEN=ghp_your_token" >> .env.local
 
 ### Development
 
-Start the development server:
+Start both frontend and backend servers:
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+Or start them separately:
+```bash
+# Frontend only (from root)
+npm run dev:frontend
+
+# Backend only (from root)
+npm run dev:backend
+```
+
+The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`
 
 ### Build
 
-Build for production:
+Build the frontend for production:
 ```bash
 npm run build
 ```
 
-Preview production build:
+This creates optimized files in `frontend/dist/`
+
+### Production
+
+Start the production server (serves both API and built frontend):
 ```bash
-npm run preview
+npm start
 ```
+
+The entire app will be available at `http://localhost:3000`
 
 ## Deployment
 
@@ -192,32 +219,57 @@ Then upload the `dist/` folder contents to your hosting provider.
 ## Project Structure
 
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── Layout.tsx      # Main layout with sidebar
-│   ├── MetricCard.tsx  # Metric display cards
-│   ├── LineChart.tsx   # Line chart component
-│   ├── BarChart.tsx    # Bar chart component
-│   └── PieChart.tsx    # Pie chart component
-├── config/             # Configuration files
-│   ├── apiConfig.ts    # API configuration with validation
-│   └── apiConfig.local.example.ts  # Example local config
-├── pages/              # Page components
-│   ├── Overview.tsx    # Dashboard overview
-│   ├── Usage.tsx       # Usage metrics
-│   ├── Performance.tsx # Performance analytics
-│   ├── Adoption.tsx    # Adoption metrics
-│   ├── Admin.tsx       # API configuration page
-│   └── live/           # Live data pages
-├── services/           # API and services
-│   ├── api.ts          # Mock data service
-│   ├── githubApi.ts    # GitHub API integration
-│   └── dataTransform.ts # Data transformation
-├── types/              # TypeScript type definitions
-│   └── metrics.ts      # Metrics data types
-├── App.tsx             # Main app component
-├── main.tsx            # Application entry point
-└── index.css           # Global styles
+GHCPDashboardApp/
+├── frontend/               # React frontend application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   │   ├── Layout.tsx # Main layout with sidebar
+│   │   │   ├── MetricCard.tsx  # Metric display cards
+│   │   │   ├── LineChart.tsx   # Line chart component
+│   │   │   ├── BarChart.tsx    # Bar chart component
+│   │   │   ├── PieChart.tsx    # Pie chart component
+│   │   │   └── ThemeToggle.tsx # Dark/light theme toggle
+│   │   ├── config/        # Configuration files
+│   │   │   ├── apiConfig.ts    # API configuration with validation
+│   │   │   └── apiConfig.local.example.ts  # Example local config
+│   │   ├── contexts/      # React contexts
+│   │   │   └── ThemeContext.tsx # Theme management
+│   │   ├── pages/         # Page components
+│   │   │   ├── Home.tsx   # Landing page
+│   │   │   ├── Admin.tsx  # API configuration page
+│   │   │   ├── enterprise/ # Enterprise-level pages
+│   │   │   │   ├── demo/  # Demo data pages
+│   │   │   │   └── live/  # Live data pages
+│   │   │   └── org/       # Organization-level pages
+│   │   │       ├── demo/  # Demo data pages
+│   │   │       └── live/  # Live data pages
+│   │   ├── services/      # API and services
+│   │   │   ├── api.ts     # Mock data service
+│   │   │   ├── githubApi.ts # GitHub API integration
+│   │   │   └── dataTransform.ts # Data transformation
+│   │   ├── types/         # TypeScript type definitions
+│   │   │   └── metrics.ts # Metrics data types
+│   │   ├── App.tsx        # Main app component
+│   │   ├── main.tsx       # Application entry point
+│   │   └── index.css      # Global styles
+│   ├── public/            # Static assets
+│   ├── index.html         # HTML template
+│   ├── vite.config.ts     # Vite configuration
+│   ├── tsconfig.json      # TypeScript configuration
+│   ├── tailwind.config.js # Tailwind CSS configuration
+│   └── package.json       # Frontend dependencies
+├── backend/               # Express.js backend API
+│   ├── server.js          # API server and proxy
+│   └── package.json       # Backend dependencies
+├── docs/                  # Documentation
+│   ├── API_CONFIGURATION.md
+│   ├── BACKEND_PROXY.md
+│   ├── METRICS_INSIGHTS.md
+│   └── DATA_STORAGE.md
+├── Deployment/            # Deployment configurations
+├── infra/                 # Infrastructure as code
+├── package.json           # Root scripts and concurrently
+└── README.md              # This file
 ```
 
 ## GitHub Copilot API Integration

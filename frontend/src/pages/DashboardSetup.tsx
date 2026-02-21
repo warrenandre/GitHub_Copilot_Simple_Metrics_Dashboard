@@ -168,23 +168,21 @@ const DashboardSetup = () => {
         team_slug: apiConfig.team_slug
       }
       
-      // Fetch data from GitHub API
-      console.log('📥 Downloading live data from GitHub API...')
-      const data = await githubApiService.fetchFromGitHub(apiConfigToUse, config?.level || 'enterprise')
+      // Fetch 30-day metrics directly from backend proxy
+      console.log('📥 Fetching 30-day metrics from backend proxy...')
+      const result = await githubApiService.fetch30DayMetrics(apiConfigToUse, config?.level || 'enterprise')
       
-      // Save to localStorage
-      const storageKey = config?.level === 'enterprise' 
-        ? 'copilot_enterprise_metrics_data' 
-        : 'copilot_org_metrics_data'
-      
-      localStorage.setItem(storageKey, JSON.stringify(data))
-      localStorage.setItem('copilot_metrics_timestamp', new Date().toISOString())
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to download 30-day metrics')
+      }
       
       setDataDownloaded(true)
-      console.log('✅ Data downloaded and cached successfully')
+      console.log('✅ 30-day metrics downloaded successfully!')
+      console.log(`   Records: ${result.recordCount}`)
+      console.log(`   Date Range: ${result.dateRange?.from} to ${result.dateRange?.to}`)
     } catch (error) {
-      console.error('❌ Failed to download data:', error)
-      setDownloadError(error instanceof Error ? error.message : 'Failed to download data from GitHub API')
+      console.error('❌ Failed to download 30-day metrics:', error)
+      setDownloadError(error instanceof Error ? error.message : 'Failed to download 30-day metrics')
     } finally {
       setIsDownloading(false)
     }
@@ -663,7 +661,7 @@ const DashboardSetup = () => {
                 {!dataDownloaded ? (
                   <>
                     <p className="text-slate-400 text-sm mb-4">
-                      Before creating your dashboard, download the latest metrics from GitHub API.
+                      Before creating your dashboard, download the 30-day metrics from GitHub API.
                     </p>
                     
                     {downloadError && (
@@ -678,6 +676,7 @@ const DashboardSetup = () => {
                       </div>
                     )}
                     
+                    {/* Download 30-Day Metrics Button */}
                     <button
                       onClick={handleDownloadData}
                       disabled={isDownloading}
@@ -686,12 +685,12 @@ const DashboardSetup = () => {
                       {isDownloading ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                          Downloading...
+                          Downloading Metrics...
                         </>
                       ) : (
                         <>
                           <Download className="w-5 h-5" />
-                          Download Data from GitHub
+                          Download 30-Day Metrics
                         </>
                       )}
                     </button>
@@ -701,7 +700,7 @@ const DashboardSetup = () => {
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-400" />
                       <div>
-                        <p className="text-green-400 font-medium">Data Downloaded Successfully</p>
+                        <p className="text-green-400 font-medium">Data Imported Successfully</p>
                         <p className="text-green-300 text-sm mt-1">You can now create your dashboard</p>
                       </div>
                     </div>

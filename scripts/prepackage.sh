@@ -21,8 +21,8 @@ DEPLOY_DIR=".azd-deploy"
 rm -rf "$DEPLOY_DIR"
 mkdir -p "$DEPLOY_DIR"
 
-# Copy dist folder
-cp -r dist "$DEPLOY_DIR/"
+# Copy dist folder from frontend
+cp -r frontend/dist "$DEPLOY_DIR/"
 
 # Copy .env.example as .env for deployment (sample values)
 cp .env.example "$DEPLOY_DIR/.env"

@@ -1,6 +1,8 @@
 import { GitHubCopilotMetricsResponse, GitHubCopilotAgentsResponse, APIConfig, DownloadResult } from '../types/metrics'
 
 class GitHubCopilotAPIService {
+  // Use backend proxy in production, or direct API in development if needed
+  private readonly proxyBaseUrl = import.meta.env.VITE_API_PROXY_URL || '/api'
   private readonly baseUrl = 'https://api.github.com'
   private readonly apiVersion = '2022-11-28'
   private readonly localStorageKey = 'copilot_metrics_data'
@@ -12,7 +14,7 @@ class GitHubCopilotAPIService {
   private readonly dataFileName = 'copilot-metrics.json'
 
   /**
-   * Fetch metrics from GitHub Copilot Metrics API
+   * Fetch metrics from GitHub Copilot Metrics API via backend proxy
    */
   async fetchFromGitHub(config: APIConfig, level: 'enterprise' | 'organization' = 'enterprise'): Promise<GitHubCopilotMetricsResponse> {
     const { org, token, since, until: untilDate, team_slug } = config
@@ -25,39 +27,24 @@ class GitHubCopilotAPIService {
     console.log('  Date Range:', { since, until: untilDate })
     console.log('  Team Slug:', team_slug || '(org-wide)')
 
-    // Construct endpoint URL based on level
-    let endpoint: string
-    if (level === 'enterprise') {
-      endpoint = team_slug
-        ? `${this.baseUrl}/enterprises/${org}/team/${team_slug}/copilot/metrics`
-        : `${this.baseUrl}/enterprises/${org}/copilot/metrics`
-    } else {
-      endpoint = team_slug
-        ? `${this.baseUrl}/orgs/${org}/teams/${team_slug}/copilot/metrics`
-        : `${this.baseUrl}/orgs/${org}/copilot/metrics`
-    }
-
-    // Build query parameters
+    // Build query parameters for proxy
     const params = new URLSearchParams()
+    params.append('org', org)
+    params.append('level', level)
     if (since) params.append('since', since)
     if (untilDate) params.append('until', untilDate)
+    if (team_slug) params.append('team_slug', team_slug)
 
-    const url = params.toString() ? `${endpoint}?${params}` : endpoint
+    const proxyUrl = `${this.proxyBaseUrl}/github/metrics?${params.toString()}`
 
     // DEBUG: Log request details
-    console.log('📤 Request URL:', url)
-    console.log('📤 Request Headers:', {
-      Accept: 'application/vnd.github+json',
-      Authorization: 'Bearer [REDACTED]',
-      'X-GitHub-Api-Version': this.apiVersion,
-    })
+    console.log('📤 Proxy Request URL:', proxyUrl)
 
-    const response = await fetch(url, {
+    const response = await fetch(proxyUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': this.apiVersion,
+        'Content-Type': 'application/json',
       },
     })
 
@@ -65,7 +52,8 @@ class GitHubCopilotAPIService {
     console.log('📥 Response Status:', response.status, response.statusText)
 
     if (!response.ok) {
-      const errorText = await response.text()
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      const errorText = errorData.error || response.statusText
       console.error('❌ API Error Response:', errorText)
       console.error('💡 Troubleshooting:')
       
@@ -111,45 +99,34 @@ class GitHubCopilotAPIService {
   async fetchAgentsFromGitHub(config: APIConfig): Promise<GitHubCopilotAgentsResponse> {
     const { org, token, since, until: untilDate } = config
 
-    // DEBUG: Log configuration
-    console.log('🔍 GitHub Copilot Agents API Debug Info:')
+    console.log('🔍 GitHub Copilot Agents Metrics API Debug Info:')
     console.log('  Enterprise:', org)
     console.log('  Token Present:', !!token)
-    console.log('  Token Prefix:', token ? token.substring(0, 4) + '...' : 'none')
     console.log('  Date Range:', { since, until: untilDate })
 
-    // Construct endpoint URL for agents
-    const endpoint = `${this.baseUrl}/enterprises/${org}/copilot/agents`
-
-    // Build query parameters
+    // Build query parameters for proxy
     const params = new URLSearchParams()
+    params.append('org', org)
     if (since) params.append('since', since)
     if (untilDate) params.append('until', untilDate)
 
-    const url = params.toString() ? `${endpoint}?${params}` : endpoint
+    const proxyUrl = `${this.proxyBaseUrl}/github/agents?${params.toString()}`
 
-    // DEBUG: Log request details
-    console.log('📤 Agents Request URL:', url)
-    console.log('📤 Request Headers:', {
-      Accept: 'application/vnd.github+json',
-      Authorization: 'Bearer [REDACTED]',
-      'X-GitHub-Api-Version': this.apiVersion,
-    })
+    console.log('📤 Proxy Request URL:', proxyUrl)
 
-    const response = await fetch(url, {
+    const response = await fetch(proxyUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': this.apiVersion,
+        'Content-Type': 'application/json',
       },
     })
 
-    // DEBUG: Log response status
     console.log('📥 Agents Response Status:', response.status, response.statusText)
 
     if (!response.ok) {
-      const errorText = await response.text()
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      const errorText = errorData.error || response.statusText
       console.error('❌ Agents API Error Response:', errorText)
       console.error('💡 Troubleshooting:')
       
@@ -170,7 +147,6 @@ class GitHubCopilotAPIService {
 
     const data: GitHubCopilotAgentsResponse = await response.json()
     
-    // DEBUG: Log success
     console.log('✅ Agents data received successfully!')
     console.log('  Records:', data.length)
     if (data.length > 0) {
@@ -504,7 +480,84 @@ class GitHubCopilotAPIService {
   }
 
   /**
-   * Fetch seats data from GitHub Copilot API
+   * Fetch 30-day metrics directly from backend proxy
+   * Backend handles downloading from Azure CDN to avoid CORS issues
+   */
+  async fetch30DayMetrics(config: APIConfig, level: 'enterprise' | 'organization' = 'enterprise'): Promise<DownloadResult> {
+    const { org, token } = config
+
+    console.log(`🔍 GitHub Copilot 30-Day Metrics Proxy Request (${level}):`)
+    console.log('  Organization/Enterprise:', org)
+    console.log('  Token Present:', !!token)
+
+    try {
+      const proxyUrl = `${this.proxyBaseUrl}/github/metrics/30-day`
+      
+      console.log('📤 Proxy Request URL:', proxyUrl)
+
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ org, level }),
+      })
+
+      console.log('📥 Proxy Response Status:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorText = errorData.error || response.statusText
+        console.error('❌ 30-Day Metrics Proxy Error:', errorText)
+        
+        throw new Error(`Backend proxy error (${response.status}): ${errorText}`)
+      }
+
+      const result = await response.json()
+      
+      if (!result.success || !result.data) {
+        throw new Error('Invalid response from backend proxy')
+      }
+
+      console.log('✅ 30-Day metrics received from proxy!')
+      console.log('  Records:', result.data.length)
+
+      // Save to localStorage
+      const storageKey = level === 'enterprise' 
+        ? 'copilot_enterprise_metrics_data' 
+        : 'copilot_org_metrics_data'
+      
+      localStorage.setItem(storageKey, JSON.stringify(result.data))
+      localStorage.setItem(`${storageKey}_timestamp`, new Date().toISOString())
+      
+      console.log(`✅ Data saved to localStorage: ${storageKey}`)
+
+      // Get date range
+      const dateRange = {
+        from: result.metadata?.report_start_day || result.data[0]?.date || 'unknown',
+        to: result.metadata?.report_end_day || result.data[result.data.length - 1]?.date || 'unknown',
+      }
+
+      return {
+        success: true,
+        message: `Successfully downloaded ${result.data.length} records of 30-day metrics`,
+        recordCount: result.data.length,
+        dateRange,
+      }
+
+    } catch (error) {
+      console.error('❌ 30-Day Metrics Fetch Error:', error)
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred while fetching 30-day metrics',
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  /**
+   * Fetch seats data from GitHub Copilot API via backend proxy
    */
   async fetchSeatsFromGitHub(config: APIConfig, level: 'enterprise' | 'organization'): Promise<any> {
     const { org, token } = config
@@ -513,26 +566,28 @@ class GitHubCopilotAPIService {
     console.log('  Organization/Enterprise:', org)
     console.log('  Token Present:', !!token)
 
-    // Construct endpoint URL based on level
-    const endpoint = level === 'enterprise'
-      ? `${this.baseUrl}/enterprises/${org}/copilot/billing/seats`
-      : `${this.baseUrl}/orgs/${org}/copilot/billing/seats`
+    // Build query parameters for proxy
+    const params = new URLSearchParams()
+    params.append('org', org)
+    params.append('level', level)
 
-    console.log('📤 Seats Request URL:', endpoint)
+    const proxyUrl = `${this.proxyBaseUrl}/github/seats?${params.toString()}`
 
-    const response = await fetch(endpoint, {
+    console.log('📤 Proxy Request URL:', proxyUrl)
+
+    const response = await fetch(proxyUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': this.apiVersion,
+        'Content-Type': 'application/json',
       },
     })
 
     console.log('📥 Seats Response Status:', response.status, response.statusText)
 
     if (!response.ok) {
-      const errorText = await response.text()
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      const errorText = errorData.error || response.statusText
       console.error('❌ Seats API Error Response:', errorText)
       console.error('💡 Troubleshooting:')
       
