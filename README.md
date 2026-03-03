@@ -281,7 +281,9 @@ The live pages will:
 - Personal access token with correct scopes
 - Copilot Metrics API access enabled
 
-For detailed documentation: [docs/API_CONFIGURATION.md](docs/API_CONFIGURATION.md)
+For detailed documentation: 
+- **Configuration Guide:** [docs/API_CONFIGURATION.md](docs/API_CONFIGURATION.md)
+- **Admin Testing Guide:** [docs/ADMIN_FUNCTIONAL_TEST_GUIDE.md](docs/ADMIN_FUNCTIONAL_TEST_GUIDE.md) | [PDF](docs/ADMIN_FUNCTIONAL_TEST_GUIDE.pdf) - Comprehensive test cases for admin functionality
 
 API Documentation: [GitHub Copilot Metrics API](https://docs.github.com/en/rest/copilot/copilot-metrics)
 
